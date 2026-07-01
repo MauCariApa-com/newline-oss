@@ -13,7 +13,6 @@ Where every line of code tells a story, and every story starts a new line.
 ## Tech Stack
 
 - **Framework**: Astro 5.18.1
-- **CMS**: TinaCMS
 - **Styling**: Tailwind CSS
 - **Content**: Markdown
 - **Deployment**: Vercel/Netlify/CloudFlare
