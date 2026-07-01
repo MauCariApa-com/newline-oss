@@ -1,0 +1,169 @@
+---
+interface Props {
+  headings?: Array<{
+    depth: number;
+    slug: string;
+    text: string;
+  }>;
+}
+
+const { headings = [] } = Astro.props;
+
+// Filter headings to only show h2 and h3
+const filteredHeadings = headings.filter(heading => heading.depth <= 3);
+---
+
+{filteredHeadings.length > 0 && (
+  <div class="toc-container">
+    <div class="toc-header">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+        </svg>
+        Daftar Isi
+      </h3>
+    </div>
+    <nav class="toc-nav">
+      <ul class="space-y-2">
+        {filteredHeadings.map((heading) => (
+          <li class={`toc-item toc-depth-${heading.depth}`}>
+            <a 
+              href={`#${heading.slug}/`}
+              class="toc-link block py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors border-l-2 border-transparent hover:border-primary-600 dark:hover:border-primary-400 pl-3"
+              data-heading-id={heading.slug}
+            >
+              {heading.text}
+            </a>
+          </li>
+        ))}
+      </ul>
+    </nav>
+  </div>
+)}
+
+<style>
+  .toc-container {
+    @apply bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700;
+  }
+  
+  .toc-depth-2 {
+    @apply ml-0;
+  }
+  
+  .toc-depth-3 {
+    @apply ml-4;
+  }
+  
+  .toc-link.active {
+    @apply text-primary-600 dark:text-primary-400 font-medium border-primary-600 dark:border-primary-400 bg-primary-50 dark:bg-primary-900/20;
+  }
+</style>
+
+<script>
+  // Auto-generate TOC if no headings provided
+  function generateTOC() {
+    const existingTOC = document.querySelector('.toc-container');
+    if (!existingTOC) {
+      const headings = document.querySelectorAll('h2[id], h3[id]');
+      if (headings.length === 0) return;
+      
+      // Create TOC container
+      const tocContainer = document.createElement('div');
+      tocContainer.className = 'toc-container bg-gray-50 dark:bg-gray-800 rounded-lg p-4 border border-gray-200 dark:border-gray-700 mb-8';
+      
+      const tocHeader = document.createElement('h3');
+      tocHeader.className = 'text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center';
+      tocHeader.innerHTML = `
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+        </svg>
+        Daftar Isi
+      `;
+      
+      const tocNav = document.createElement('nav');
+      tocNav.className = 'toc-nav';
+      
+      const tocList = document.createElement('ul');
+      tocList.className = 'space-y-2';
+      
+      headings.forEach((heading) => {
+        const li = document.createElement('li');
+        li.className = `toc-item toc-depth-${heading.tagName.toLowerCase() === 'h2' ? '2' : '3'} ${heading.tagName.toLowerCase() === 'h3' ? 'ml-4' : 'ml-0'}`;
+        
+        const link = document.createElement('a');
+        link.href = `#${heading.id}`;
+        link.className = 'toc-link block py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors border-l-2 border-transparent hover:border-primary-600 dark:hover:border-primary-400 pl-3';
+        link.setAttribute('data-heading-id', heading.id);
+        link.textContent = heading.textContent;
+        
+        li.appendChild(link);
+        tocList.appendChild(li);
+      });
+      
+      tocNav.appendChild(tocList);
+      tocContainer.appendChild(tocHeader);
+      tocContainer.appendChild(tocNav);
+      
+      // Insert TOC after the first paragraph or at the beginning of content
+      const content = document.querySelector('.prose, article, main');
+      if (content) {
+        const firstParagraph = content.querySelector('p');
+        if (firstParagraph) {
+          firstParagraph.parentNode.insertBefore(tocContainer, firstParagraph.nextSibling);
+        } else {
+          content.insertBefore(tocContainer, content.firstChild);
+        }
+      }
+    }
+  }
+  
+  // Add active state to current section
+  function updateActiveHeading() {
+    const headings = document.querySelectorAll('h2[id], h3[id]');
+    const tocLinks = document.querySelectorAll('.toc-link');
+    
+    let current = '';
+    
+    headings.forEach((heading) => {
+      const rect = heading.getBoundingClientRect();
+      if (rect.top <= 100) {
+        current = heading.id;
+      }
+    });
+    
+    tocLinks.forEach((link) => {
+      link.classList.remove('active');
+      if (link.getAttribute('data-heading-id') === current) {
+        link.classList.add('active');
+      }
+    });
+  }
+  
+  // Smooth scroll for TOC links
+  function setupSmoothScroll() {
+    document.querySelectorAll('.toc-link').forEach(link => {
+      link.addEventListener('click', (e) => {
+        e.preventDefault();
+        const targetId = link.getAttribute('data-heading-id');
+        const targetElement = document.getElementById(targetId);
+        
+        if (targetElement) {
+          targetElement.scrollIntoView({
+            behavior: 'smooth',
+            block: 'start'
+          });
+        }
+      });
+    });
+  }
+  
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    generateTOC();
+    updateActiveHeading();
+    setupSmoothScroll();
+  });
+  
+  // Update on scroll
+  window.addEventListener('scroll', updateActiveHeading);
+</script>

@@ -1,0 +1,121 @@
+---
+import BaseLayout from "../../layouts/BaseLayout.astro";
+import PostCard from "../../components/PostCard.astro";
+import SidebarFilter from "../../components/SidebarFilter.astro";
+import { getCollection } from "astro:content";
+
+const allPosts = await getCollection("posts");
+const posts = allPosts
+  .filter((p) => !p.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+export interface Props {
+  class?: string;
+}
+---
+
+<head>
+  <meta name="robots" content="noindex, nofollow, nosnippet, noarchive" />
+</head>
+
+<style is:inline>
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  @keyframes fadeOut {
+    from {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    to {
+      opacity: 0;
+      transform: translateY(16px);
+    }
+  }
+
+  .fade-in {
+    animation: fadeIn 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+
+  .fade-out {
+    animation: fadeOut 0.6s cubic-bezier(0.4, 0, 0.2, 1) forwards;
+  }
+</style>
+
+<BaseLayout
+  title="Blog"
+  description="Kumpulan artikel pilihan dari MauCariApa.com"
+>
+
+  <!-- Ini akan masuk ke body, tapi tetap terbaca oleh Googlebot -->
+  <meta name="robots" content="nosnippet" />
+
+  <div
+    class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8
+           flex flex-col lg:grid lg:grid-cols-[250px_1fr] lg:gap-8"
+  >
+    <div class="order-1 lg:order-none mb-8 lg:mb-0">
+      <SidebarFilter posts={posts} />
+    </div>
+
+    <main
+      id="postContainer"
+      class="order-2 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 auto-rows-max w-full"
+    >
+      {
+        posts.map((post) => (
+          <PostCard
+            key={post.id}
+            post={post}
+            data-penulis={
+              post.data.authors?.map((a) => a.toLowerCase()).join(" ") ?? ""
+            }
+            data-kategori={
+              Array.isArray(post.data.category)
+                ? post.data.category.map((c) => c.toLowerCase()).join(" ")
+                : (post.data.category?.toLowerCase() ?? "")
+            }
+          />
+        ))
+      }
+    </main>
+  </div>
+
+      <script is:inline>
+        document.addEventListener("DOMContentLoaded", () => {
+        const items = document.querySelectorAll("#postContainer > *");
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              entry.target.classList.remove("fade-out");
+              entry.target.classList.add("fade-in");
+            } else {
+              entry.target.classList.remove("fade-in");
+              entry.target.classList.add("fade-out");
+            }
+          });
+        },
+        {
+          rootMargin: "0px 0px 150px 0px",
+          threshold: 0.1,
+        }
+      );
+
+      items.forEach((el) => {
+        el.classList.add("fade-out");
+        observer.observe(el);
+      });
+    });
+  </script>
+
+</BaseLayout>

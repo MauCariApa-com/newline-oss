@@ -1,0 +1,147 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+export async function getStaticPaths() {
+  const posts = await getCollection('posts');
+  const publishedPosts = posts.filter(post => !post.data.draft && post.data.series);
+  
+  // Get unique series
+  const seriesNames = [...new Set(publishedPosts.map(post => post.data.series))];
+  
+  return seriesNames.map((seriesName) => ({
+    params: { slug: seriesName.toLowerCase().replace(/\s+/g, '-') },
+    props: { 
+      seriesName,
+      posts: publishedPosts
+        .filter(post => post.data.series === seriesName)
+        .sort((a, b) => a.data.pubDate.valueOf() - b.data.pubDate.valueOf()) // Sort chronologically for series
+    },
+  }));
+}
+
+const { seriesName, posts } = Astro.props;
+---
+
+<head>
+  <meta name="robots" content="noindex, nofollow, nosnippet, noarchive" />
+</head>
+
+<BaseLayout 
+  title={`${seriesName} Series`}
+  description={`Ikuti series ${seriesName} dengan ${posts.length} artikel yang membahas topik secara mendalam dan terstruktur.`}
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        {seriesName}
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300 mb-6">
+        Series ini terdiri dari {posts.length} artikel yang membahas topik secara mendalam dan terstruktur.
+      </p>
+      <div class="inline-flex items-center bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 px-4 py-2 rounded-full">
+        <svg class="w-5 h-5 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+        </svg>
+        {posts.length} Artikel dalam Series
+      </div>
+    </div>
+
+    <!-- Breadcrumb -->
+    <nav class="mb-8">
+      <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
+        <li><a href="/#" class="hover:text-gray-700 dark:hover:text-gray-200">Beranda</a></li>
+        <li>/</li>
+        <li><a href="/#series/" class="hover:text-gray-700 dark:hover:text-gray-200">Series</a></li>
+        <li>/</li>
+        <li class="text-gray-900 dark:text-white">{seriesName}</li>
+      </ol>
+    </nav>
+
+    <!-- Series Progress -->
+    <div class="card p-6 mb-8">
+      <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+        Progress Series
+      </h3>
+      
+      <div class="mt-2">
+        {posts.map((post, index) => (
+          <div class="flex">
+            {/* Kolom Kiri: Indikator Angka & Garis */}
+            <div class="flex flex-col items-center mr-4">
+              <!-- Lingkaran Angka -->
+              <div class={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium z-10 ring-4 ring-white dark:ring-gray-800 ${
+                  // Opsional: Beri warna berbeda jika artikel ini sedang dibuka/aktif (misal lewat slug)
+                  // post.slug === Astro.params.slug ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/50' : 
+                  'bg-primary-600 text-white'
+                }`}>
+                {index + 1}
+              </div>
+              
+              <!-- Garis Vertikal Putus-putus Mengalir -->
+              {index !== posts.length - 1 && (
+                <div class="flex-grow my-1">
+                  <!-- 
+                    Gunakan text-gray-300/600 untuk warna garis.
+                    Ganti ke text-primary-500 jika ingin efek "listrik" berwarna.
+                  -->
+                  <div class="dashed-flow h-full mx-auto text-gray-300 dark:text-gray-600"></div>
+                </div>
+              )}
+            </div>
+
+            {/* Kolom Kanan: Konten */}
+            <div class={`flex-grow pt-1 ${index !== posts.length - 1 ? 'pb-8' : ''}`}>
+              <a 
+                href={`/${post.slug}/`}
+                class="text-gray-900 dark:text-white hover:text-primary-600 dark:hover:text-primary-400 font-medium block"
+              >
+                {post.data.title}
+              </a>
+              <div class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                {post.data.pubDate.toLocaleDateString('id-ID', { 
+                  year: 'numeric', 
+                  month: 'long', 
+                  day: 'numeric' 
+                })}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+    </div>
+
+    <!-- Posts Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {posts.map((post) => (
+        <PostCard post={post} />
+      ))}
+    </div>
+  </div>
+
+  <style>
+    /* Animasi aliran garis putus-putus */
+    @keyframes flowDashed {
+      0% {
+        background-position: 0 0;
+      }
+      100% {
+        background-position: 0 20px; /* Nilai ini harus 2x dari tinggi pattern agar loop mulus */
+      }
+    }
+
+    .dashed-flow {
+      /* Lebar garis */
+      width: 2px; 
+      /* Membuat pola garis putus-putus menggunakan gradient: Warna 50%, Transparan 50% */
+      background-image: linear-gradient(to bottom, currentColor 50%, transparent 50%);
+      /* Ukuran pattern: Lebar 100%, Tinggi 10px (5px warna, 5px transparan) */
+      background-size: 100% 10px;
+      /* Jalankan animasi */
+      animation: flowDashed 2s linear infinite;
+    }
+  </style>
+
+</BaseLayout>

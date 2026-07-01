@@ -1,0 +1,34 @@
+User-agent: *
+Allow: /
+
+Disallow: /api/*
+Disallow: /page/*
+Disallow: /admin/*
+Disallow: /search/
+Disallow: /topik/*
+Disallow: /kategori/*
+Disallow: /kerjasama-artikel/
+Disallow: /order-backlink/
+Disallow: /kirim-artikel/
+Disallow: /setup-vps/
+Disallow: /pembayaran-berhasil/
+Disallow: /pembayaran-iklan-banner-berhasil/
+Disallow: /pembayaran-vps-berhasil/
+
+User-agent: Mediapartners-Google
+Allow: /
+
+User-agent: Google-Display-Ads-Bot
+Allow: /
+
+User-agent: Semaltbot
+Disallow: /
+
+User-agent: SeobilityBot
+Disallow: /
+
+User-agent: Bad-Neighborhood
+Disallow: /
+
+User-agent: SeoCherryBot
+Disallow: /

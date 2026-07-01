@@ -1,0 +1,44 @@
+---
+const color = 'var(--progress-color, #29d)';
+const height = '4px';
+const { items = [] } = Astro.props;
+---
+
+<style define:vars={{ color, height }}>
+  .reading-progress {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 0%;
+    height: var(--height);
+    background: var(--color);
+    z-index: 9999;
+    transition: width 0.15s ease-out;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .reading-progress {
+      transition: none;
+    }
+  }
+</style>
+
+<div id="reading-progress" class="reading-progress"></div>
+
+<script>
+  const bar = document.getElementById('reading-progress');
+  if (location.pathname !== '/' && location.pathname !== '/blog') {
+    const update = () => {
+      const scrollTop = window.scrollY || document.documentElement.scrollTop;
+      const docHeight =
+        document.documentElement.scrollHeight -
+        document.documentElement.clientHeight;
+      const progress = (scrollTop / docHeight) * 100;
+      bar.style.width = progress + '%';
+    };
+
+    document.addEventListener('scroll', update, { passive: true });
+  } else {
+    bar.style.display = 'none';
+  }
+</script>

@@ -1,0 +1,112 @@
+---
+import BaseLayout from './BaseLayout.astro';
+import UniversalTableOfContents from '../components/UniversalTableOfContents.astro';
+
+export interface Props {
+  content: {
+    title: string;
+    description?: string;
+  };
+}
+
+const { content } = Astro.props;
+const { title, description } = content;
+
+// Generate headings for TOC
+const headings = [
+  { depth: 2, slug: 'bagian-pertama', text: '1. Bagian Pertama' },
+  { depth: 2, slug: 'bagian-kedua', text: '2. Bagian Kedua' },
+  { depth: 2, slug: 'bagian-ketiga', text: '3. Bagian Ketiga' }
+];
+---
+
+<BaseLayout title={title} description={description}>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <div class="lg:grid lg:grid-cols-12 lg:gap-8">
+      <!-- Main Content -->
+      <article class="lg:col-span-8 prose prose-lg dark:prose-invert max-w-none">
+        <header class="mb-8">
+          <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
+            {title}
+          </h1>
+          {description && (
+            <p class="text-lg text-gray-600 dark:text-gray-300">
+              Lorem ipsum dolores sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.
+            </p>
+          )}
+          
+          <div class="mt-6 text-sm text-gray-500 dark:text-gray-400">
+            <p>Lorem ipsum dolores sit amet, consectetur adipiscing elit.</p>
+          </div>
+        </header>
+
+        <!-- Table of Contents (Mobile) -->
+        <div class="lg:hidden mb-8">
+          <UniversalTableOfContents headings={headings} />
+        </div>
+
+        <h2 id="bagian-pertama" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          1. Bagian Pertama
+        </h2>
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
+          Lorem ipsum dolores sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur.
+        </p>
+
+        <h2 id="bagian-kedua" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          2. Bagian Kedua
+        </h2>
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
+          Lorem ipsum dolores sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum. Sed ut perspiciatis unde omnis iste natus error sit voluptatem accusantium doloremque laudantium.
+        </p>
+
+        <h2 id="bagian-ketiga" class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+          3. Bagian Ketiga
+        </h2>
+        <p class="text-gray-700 dark:text-gray-300 leading-relaxed mb-8">
+          Lorem ipsum dolores sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Nemo enim ipsam voluptatem quia voluptas sit aspernatur aut odit aut fugit, sed quia consequuntur magni dolores eos qui ratione voluptatem sequi nesciunt.
+        </p>
+        
+        <slot />
+      </article>
+
+      <!-- Sidebar -->
+      <aside class="hidden lg:block lg:col-span-4">
+        <div class="sticky top-8 space-y-8">
+          <!-- Table of Contents -->
+          <UniversalTableOfContents headings={headings} />
+          
+          <!-- Quick Links -->
+          <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+              Quick Links
+            </h3>
+            <div class="space-y-2">
+              <a href="/#kontak/" class="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                📞 Hubungi Kami
+              </a>
+              <a href="/#sanggahan/" class="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                ℹ️ Sanggahan
+              </a>
+              <a href="/#syarat-ketentuan/" class="block text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400">
+                ⚖️ Syarat & Ketentuan
+              </a>
+            </div>
+          </div>
+
+          <!-- Donation Section -->
+          <div class="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6">
+            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
+              Dukung Kami
+            </h3>
+            <p class="text-sm text-gray-600 dark:text-gray-400 mb-4">
+              Lorem ipsum dolores sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt.
+            </p>
+              <a href="/#donasi/" class="hidden sm:inline-flex items-center bg-[#414071] hover:bg-[#414071] text-white text-sm font-medium px-4 py-2 rounded-lg transition-colors duration-200"> <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24"> <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path> </svg>
+                Dukung Kami
+              </a>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </div>
+</BaseLayout>

@@ -1,0 +1,328 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import { getCollection } from 'astro:content';
+
+const allAuthors = await getCollection('authors');
+const allPosts = await getCollection('posts');
+
+// Hanya ambil post yang sudah diterbitkan
+const publishedPosts = allPosts.filter(post => !post.data.draft);
+
+// Hitung jumlah artikel per author berdasarkan nama (`author.data.name`)
+const authorsWithPostCount = allAuthors.map(author => {
+  const postCount = publishedPosts.filter(post =>
+    Array.isArray(post.data.authors) &&
+    post.data.authors.includes(author.data.name) 
+  ).length;
+
+  return {
+    ...author,
+    postCount
+  };
+});
+
+// Urutkan berdasarkan jumlah artikel (menurun)
+const sortedAuthors = authorsWithPostCount.sort((a, b) => b.postCount - a.postCount);
+---
+
+<head>
+  <meta name="robots" content="noindex, nofollow, nosnippet, noarchive" />
+</head>
+
+<BaseLayout 
+  title="Penulis"
+  description="Kenali para penulis dan kontributor ahli yang berkontribusi dalam platform MauCariApa.com."
+  robots="noindex, nosnippet"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12">
+    
+    <!-- Page Header -->
+    <header class="text-center mb-12 md:mb-16">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        Penulis Kami
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        Kenali para ahli dan profesional berpengalaman yang berkontribusi dalam menyediakan konten berkualitas tinggi untuk komunitas.
+      </p>
+    </header>
+
+    <!-- Bagian Interaktif: Carousel 3D Penulis -->
+    <section id="authors-carousel" class="mb-16">
+      <div id="author-carousel-wrapper" class="relative w-full h-[650px] flex flex-col items-center justify-start overflow-hidden sm:overflow-visible">
+        
+        <!-- Kontainer Kartu Penulis -->
+        <div id="author-cards-container" class="relative w-full sm:w-[400px] md:w-[450px] h-[550px] z-10 touch-pan-y">
+          {sortedAuthors.map((author, index) => (
+            <article 
+              class="author-card absolute w-full h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg cursor-pointer transition-all duration-500 ease-in-out flex flex-col overflow-hidden"
+              data-index={index}
+            >
+              
+              <!-- BLOK 1: Profil (Avatar & Nama) - Terkunci -->
+              <header class="flex-none px-6 pt-8 pb-5 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
+                <div class="w-24 h-24 mb-4 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                  {author.data.avatar ? (
+                    <img src={author.data.avatar} alt={author.data.name} class="w-full h-full object-cover" />
+                  ) : (
+                    <span class="text-3xl font-bold text-gray-400 dark:text-gray-500">
+                      {author.data.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                  {author.data.name}
+                </h3>
+                {author.data.meta_title && (
+                  <p class="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">
+                    {author.data.meta_title}
+                  </p>
+                )}
+              </header>
+
+              <!-- BLOK 2: Statistik (Jumlah Artikel) - Terkunci -->
+              <div class="flex-none px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-center">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-xs font-bold uppercase tracking-wider">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                   </svg>
+                  {author.postCount} Artikel
+                </span>
+              </div>
+
+              <!-- BLOK 3: Bio Penulis (BISA DI-SCROLL) -->
+              <div class="flex-grow overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-gray-800">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-2 text-xs uppercase tracking-widest text-center sm:text-left">Tentang Penulis</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed text-center sm:text-left">
+                  {author.data.bio ? author.data.bio : "Penulis ini belum menambahkan biografi singkat."}
+                </p>
+              </div>
+
+              <!-- BLOK 4: Social Media - Terkunci -->
+              <div class="flex-none px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-center gap-4">
+                {author.data.social?.twitter && (
+                  <a href={author.data.social.twitter} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-blue-400 transition-colors">
+                    <span class="sr-only">Twitter</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/></svg>
+                  </a>
+                )}
+                {author.data.social?.linkedin && (
+                  <a href={author.data.social.linkedin} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-blue-700 transition-colors">
+                    <span class="sr-only">LinkedIn</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"/></svg>
+                  </a>
+                )}
+                {author.data.social?.github && (
+                  <a href={author.data.social.github} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <span class="sr-only">GitHub</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+                  </a>
+                )}
+                
+                {/* Fallback jika tidak ada social media */}
+                {(!author.data.social || (!author.data.social.twitter && !author.data.social.linkedin && !author.data.social.github)) && (
+                  <span class="text-xs text-gray-400 italic">Tidak ada tautan sosial</span>
+                )}
+              </div>
+
+              <!-- BLOK 5: Footer / Tombol Aksi - Terkunci -->
+              <footer class="flex-none px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <a 
+                  href={`/penulis/${author.slug}/`} 
+                  class="flex items-center justify-center w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                >
+                  Baca Semua Artikel
+                </a>
+              </footer>
+
+            </article>
+          ))}
+        </div>
+
+        <!-- Indikator Garis (Di bawah container kartu) -->
+        <div id="author-indicators" class="absolute bottom-10 flex space-x-2 z-20">
+          <!-- Generated by JS -->
+        </div>
+
+      </div>
+    </section>
+
+    <!-- Call to Action (Konten Statis Bawah) -->
+    <div class="text-center mt-16 bg-gray-50 dark:bg-gray-800 rounded-2xl p-8 sm:p-12 shadow-sm border border-gray-100 dark:border-gray-700">
+      <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-4">
+        Tertarik Berkolaborasi?
+      </h2>
+      <p class="text-gray-600 dark:text-gray-300 mb-8 max-w-2xl mx-auto">
+        Kami selalu mencari konten dan artikel berkualitas tinggi. 
+        Bagikan pengetahuan Anda dengan komunitas yang lebih luas.
+      </p>
+      <div class="flex flex-col sm:flex-row gap-4 justify-center">
+        <a href="/#kerjasama/" class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors">
+          Hubungi Kami
+        </a>
+        <a href="/#about-us/" class="bg-white hover:bg-gray-50 text-gray-900 border border-gray-200 font-semibold py-3 px-6 rounded-lg transition-colors dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600">
+          Tentang Kami
+        </a>
+      </div>
+    </div>
+
+  </div>
+</BaseLayout>
+
+<style>
+  /* Perspektif 3D untuk Carousel */
+  #author-cards-container {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+  }
+  
+  /* Styling Scrollbar Khusus Bio */
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+  }
+</style>
+
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    // Pastikan ID disesuaikan dengan kontainer penulis
+    const container = document.getElementById('author-cards-container');
+    const indicatorContainer = document.getElementById('author-indicators');
+    
+    if (!container || !indicatorContainer) return;
+
+    const cards = Array.from(container.querySelectorAll('.author-card'));
+    let currentIndex = 0;
+    const totalCards = cards.length;
+
+    // Jika penulis <= 1, tidak perlu indikator dan efek carousel
+    if (totalCards <= 1) {
+      if (indicatorContainer) indicatorContainer.style.display = 'none';
+      cards.forEach(card => {
+        card.style.transform = 'none';
+        card.style.position = 'relative';
+      });
+      return;
+    }
+
+    // 1. GENERATE INDIKATOR GARIS
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.ariaLabel = `Go to author ${i + 1}`;
+      dot.className = 'h-1.5 rounded-full transition-all duration-300 ease-in-out';
+      
+      dot.addEventListener('click', () => {
+        if (currentIndex !== i) {
+          currentIndex = i;
+          updateCarousel();
+        }
+      });
+      
+      indicatorContainer.appendChild(dot);
+    });
+
+    const indicators = Array.from(indicatorContainer.children);
+
+    function updateCarousel() {
+      // UPDATE KARTU (LOGIKA CIRCULAR 3D)
+      cards.forEach((card, index) => {
+        let offset = index - currentIndex;
+
+        // BIKIN ENDLESS: Pindahkan kartu ujung ke sisi yang berlawanan
+        if (offset < -Math.floor(totalCards / 2)) {
+          offset += totalCards;
+        } else if (offset > Math.floor(totalCards / 2)) {
+          offset -= totalCards;
+        }
+
+        const absOffset = Math.abs(offset);
+
+        // Posisi dan Efek Transform 3D
+        const translateX = offset * 45; // Jarak geser X (%)
+        const translateZ = -absOffset * 100; // Jarak mundur kedalaman (px)
+        const rotateY = offset * -20; // Rotasi Y (derajat)
+        
+        // Sembunyikan kartu jika terlalu jauh agar animasi mulus
+        const opacity = absOffset > 1 ? 0 : 1; 
+        const scale = 1 - absOffset * 0.1;
+        const zIndex = totalCards - absOffset;
+        
+        card.style.transform = `translateX(${translateX}%) scale(${scale}) translateZ(${translateZ}px) rotateY(${rotateY}deg)`;
+        card.style.opacity = String(opacity);
+        card.style.zIndex = String(zIndex);
+        
+        // Blur & Pointer Events
+        if (absOffset === 0) {
+          card.style.filter = 'blur(0px)';
+          card.style.pointerEvents = 'auto'; // Kartu di depan aktif penuh
+        } else {
+          card.style.filter = 'blur(3px)';
+          card.style.pointerEvents = 'auto'; // Tetap bisa diklik untuk digeser
+        }
+      });
+
+      // UPDATE INDIKATOR
+      indicators.forEach((dot, i) => {
+        if (i === currentIndex) {
+          dot.classList.add('w-12', 'bg-blue-600', 'dark:bg-blue-500');
+          dot.classList.remove('w-4', 'bg-gray-300', 'dark:bg-gray-600', 'hover:bg-gray-400');
+        } else {
+          dot.classList.add('w-4', 'bg-gray-300', 'dark:bg-gray-600', 'hover:bg-gray-400');
+          dot.classList.remove('w-12', 'bg-blue-600', 'dark:bg-blue-500');
+        }
+      });
+    }
+    
+    // Klik Pada Kartu untuk memajukan
+    cards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        const newIndex = parseInt(card.dataset.index);
+        // Jika yang diklik adalah kartu di belakang, majukan kartu itu
+        if (newIndex !== currentIndex) {
+          e.preventDefault(); // Cegah klik tombol/link di dalam kartu
+          currentIndex = newIndex; 
+          updateCarousel(); 
+        }
+      });
+    });
+
+    // ----------------------------------------------------
+    // FITUR SWIPE UNTUK MOBILE / TABLET
+    // ----------------------------------------------------
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    container.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const SWIPE_THRESHOLD = 50; 
+      
+      if (touchStartX - touchEndX > SWIPE_THRESHOLD) {
+        // Geser Kiri (Next)
+        currentIndex = (currentIndex + 1) % totalCards;
+        updateCarousel();
+      } else if (touchEndX - touchStartX > SWIPE_THRESHOLD) {
+        // Geser Kanan (Prev)
+        currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+        updateCarousel();
+      }
+    }
+
+    // Panggil saat load pertama kali
+    updateCarousel();
+  });
+</script>

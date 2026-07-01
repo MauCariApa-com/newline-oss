@@ -1,0 +1,86 @@
+---
+import { getCollection } from 'astro:content';
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+
+export async function getStaticPaths() {
+  const allPosts = await getCollection('posts');
+  const published = allPosts.filter(p => !p.data.draft);
+
+  const map = new Map();
+  published.forEach(post => {
+    // dukung category array atau string
+    const raw = Array.isArray(post.data.category)
+      ? post.data.category
+      : [post.data.category];
+
+    raw.forEach(cat => {
+      if (!cat || typeof cat !== 'string') return;
+      // slug inline—tidak pakai slugify
+      const slug = cat
+        .toLowerCase()
+        .trim()
+        .replace(/\s+/g, '-')
+        .replace(/[^\w\-]+/g, '')
+        .replace(/\-\-+/g, '-');
+      if (!map.has(slug)) map.set(slug, { name: cat, posts: [] });
+      map.get(slug).posts.push(post);
+    });
+  });
+
+  return Array.from(map.entries()).map(([slug, { name, posts }]) => ({
+    params: { slug },
+    props: {
+      category: name,
+      posts: posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+    },
+  }));
+}
+
+const { category, posts } = Astro.props;
+
+const getIcon = name => {
+  const key = String(name).toLowerCase();
+  return key === 'tutorial' ? '📚'
+    : key === 'review' ? '⭐'
+    : key === 'open source' ? '🔓'
+    : key === 'opini' ? '💭'
+    : '💻';
+};
+---
+
+<head>
+  <meta name="robots" content="noindex, nofollow, nosnippet, noarchive" />
+</head>
+
+<BaseLayout
+  title={`${category}`}
+  description={`Artikel dalam kategori ${category}.`}
+  robots="noindex, nosnippet"
+>
+  <div class="max-w-7xl mx-auto py-8 px-4">
+    <header class="text-center mb-12">
+      <div class="text-5xl mb-4">{getIcon(category)}</div>
+      <h1 class="text-4xl font-bold mb-2">{category}</h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        Kategori ini memiliki {posts.length} artikel berkualitas tinggi.
+      </p>
+    </header>
+
+    <nav class="mb-8 text-sm text-gray-500">
+      <a href="/#">Beranda</a> / 
+      <a href="/#kategori/" class="ml-1">Kategori</a> / 
+      <span class="ml-1">{category}</span>
+    </nav>
+
+    {posts.length > 0 ? (
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {posts.map(post => <PostCard post={post} />)}
+      </div>
+    ) : (
+      <div class="text-center text-gray-500 py-16">
+        Belum ada artikel di kategori <strong>{category}</strong>.
+      </div>
+    )}
+  </div>
+</BaseLayout>

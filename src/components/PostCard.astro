@@ -1,0 +1,143 @@
+---
+// src/components/PostCard.astro
+import { getCollection } from "astro:content";
+
+const { post } = Astro.props;
+const authorsData = await getCollection("authors");
+
+const { title, description, pubDate, heroImage, category, authors, tags } =
+  post.data;
+
+// Cari data author
+const postAuthors = (authors || [])
+  .map((name) => {
+    const lower = name.trim().toLowerCase();
+    return authorsData.find((a) => a.data.name.trim().toLowerCase() === lower);
+  })
+  .filter(Boolean);
+
+// Format tanggal
+const formatDate = (d?: Date) =>
+  d
+    ? d.toLocaleDateString("id-ID", {
+        day: "2-digit",
+        month: "2-digit",
+        year: "numeric",
+      })
+    : "—";
+
+// Slugify kategori untuk filter & URL
+const slugify = (str: string) =>
+  String(str)
+    .toLowerCase()
+    .normalize("NFKD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/\s+/g, "-") // replace spasi dengan -
+    .replace(/[^a-z0-9-]+/g, "") // hapus karakter selain a-z0-9-
+    .replace(/^-+|-+$/g, "");
+---
+
+<article
+  class="group bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-md shadow-sm hover:shadow-md transition-all duration-200 overflow-hidden flex flex-col"
+  data-penulis={postAuthors.map((a) => a.data.name).join(" ")}
+  data-kategori={(Array.isArray(category)
+    ? category.map(slugify)
+    : [slugify(category ?? "")]
+  ).join(" ")}
+  onclick={`window.location.href='/${post.slug}'`}
+>
+  {
+    heroImage && (
+      <div class="aspect-[16/9] overflow-hidden bg-gray-50 dark:bg-gray-800">
+        <img
+          src={heroImage}
+          alt={title}
+          class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+        />
+      </div>
+    )
+  }
+
+  <div class="flex flex-col p-5 flex-1">
+    <!-- Kategori + Tanggal -->
+    <div
+      class="flex flex-wrap justify-between items-center gap-2 mb-3 text-sm text-gray-500 dark:text-gray-400"
+    >
+      <div class="flex flex-wrap gap-1">
+        {
+          (Array.isArray(category) ? category : [category])
+            .filter(Boolean)
+            .map((cat) => (
+              <a
+                href={`/kategori/${slugify(cat)}/`}
+                class="px-2 py-0.5 bg-indigo-100 text-indigo-700 dark:bg-indigo-900 dark:text-indigo-200 rounded-full text-xs font-medium hover:bg-indigo-200 dark:hover:bg-indigo-800 transition"
+                onclick="event.stopPropagation()"
+              >
+                {cat}
+              </a>
+            ))
+        }
+      </div>
+      <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
+    </div>
+
+    <!-- Judul -->
+    <h3
+      class="font-semibold text-gray-900 dark:text-gray-100 text-lg mb-2 line-clamp-2"
+    >
+      <a href={`/${post.slug}`} class="hover:text-indigo-600">{title}</a>
+    </h3>
+
+    <!-- Deskripsi -->
+    {
+      description && (
+        <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
+          {description}
+        </p>
+      )
+    }
+
+    <!-- Penulis clickable -->
+    {
+      postAuthors.length > 0 && (
+        <div class="flex items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-800">
+          <div class="flex -space-x-2 mr-3">
+            {postAuthors.slice(0, 3).map((author) => (
+              <a
+                href={`/penulis/${slugify(author.data.name)}/`}
+                class="w-8 h-8 rounded-full ring-2 ring-white dark:ring-gray-800 overflow-hidden flex items-center justify-center hover:ring-indigo-500 transition"
+                title={author.data.name}
+                onclick="event.stopPropagation()"
+              >
+                {author.data.avatar ? (
+                  <img
+                    src={author.data.avatar}
+                    alt={author.data.name}
+                    class="w-8 h-8 object-cover rounded-full"
+                  />
+                ) : (
+                  <div class="w-8 h-8 bg-primary-600 flex items-center justify-center text-white text-sm font-semibold rounded-full">
+                    {author.data.name.charAt(0)}
+                  </div>
+                )}
+              </a>
+            ))}
+          </div>
+          <span class="text-sm text-gray-700 dark:text-gray-300 font-medium">
+            {postAuthors
+              .map((a) => (
+                <a
+                  href={`/penulis/${slugify(a.data.name)}/`}
+                  class="hover:text-indigo-600 transition"
+                  onclick="event.stopPropagation()"
+                >
+                  {a.data.name}
+                </a>
+              ))
+              .reduce((prev, curr) => [prev, ", ", curr])}
+          </span>
+        </div>
+      )
+    }
+  </div>
+</article>

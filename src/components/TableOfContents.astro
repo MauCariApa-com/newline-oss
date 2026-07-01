@@ -1,0 +1,152 @@
+---
+interface Props {
+  headings: Array<{
+    depth: number;
+    slug: string;
+    text: string;
+  }>;
+}
+
+const { headings } = Astro.props;
+
+const filteredHeadings = headings.filter((heading) => heading.depth <= 3);
+---
+
+{
+  filteredHeadings.length > 0 && (
+    <div class="toc-container bg-gray-50 dark:bg-gray-800 rounded-md border border-gray-200 dark:border-gray-700">
+      {/* 1. Checkbox tersembunyi untuk kontrol state (CSS Only) */}
+      <input type="checkbox" id="toc-toggle" class="hidden" />
+
+      {/* 2. Header diubah jadi Label agar bisa mengontrol checkbox */}
+      <label
+        for="toc-toggle"
+        class="toc-header block p-4 cursor-pointer select-none"
+      >
+        <div class="flex justify-between items-center text-lg font-semibold text-gray-900 dark:text-white">
+          <span>Daftar Isi</span>
+          <svg
+            class="toc-arrow w-4 h-4 transition-transform duration-300"
+            xmlns="http://www.w3.org/2000/svg"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke-width="2"
+            stroke="currentColor"
+          >
+            <path
+              stroke-linecap="round"
+              stroke-linejoin="round"
+              d="M19 9l-7 7-7-7"
+            />
+          </svg>
+        </div>
+      </label>
+
+      {/* 3. Navigasi yang visibilitasnya dikontrol CSS */}
+      <nav class="toc-nav px-4 pb-4">
+        <ul class="space-y-2">
+          {filteredHeadings.map((heading) => (
+            <li class={`toc-item toc-depth-${heading.depth}`}>
+              <a
+                href={`#${heading.slug}`}
+                class="toc-link block py-1 text-sm text-gray-600 dark:text-gray-400 hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                data-heading-id={heading.slug}
+              >
+                {heading.text}
+              </a>
+            </li>
+          ))}
+        </ul>
+      </nav>
+    </div>
+  )
+}
+
+<style>
+  /* Styling Indentasi */
+  .toc-depth-2 {
+    margin-left: 0;
+  }
+  .toc-depth-3 {
+    margin-left: 1rem;
+  }
+
+  .toc-link.active {
+    @apply text-primary-600 dark:text-primary-400 font-medium;
+  }
+
+  /* --- LOGIKA CSS MURNI (TANPA JS) --- */
+
+  /* MOBILE (< 1024px) */
+  @media (max-width: 1023px) {
+    /* Default: Konten disembunyikan */
+    .toc-nav {
+      display: none;
+    }
+
+    /* Saat checkbox dicentang (User klik header): Tampilkan konten */
+    #toc-toggle:checked ~ .toc-nav {
+      display: block;
+    }
+
+    /* Saat checkbox dicentang: Putar panah */
+    #toc-toggle:checked ~ .toc-header .toc-arrow {
+      transform: rotate(180deg);
+    }
+  }
+
+  /* DESKTOP (>= 1024px) */
+  @media (min-width: 1024px) {
+    /* Konten selalu tampil di desktop */
+    .toc-nav {
+      display: block !important;
+    }
+
+    /* Header tidak perlu cursor pointer karena tidak bisa di-klik di desktop */
+    .toc-header {
+      cursor: default;
+    }
+
+    /* Sembunyikan panah di desktop */
+    .toc-arrow {
+      display: none;
+    }
+  }
+</style>
+
+<script>
+  // Script ini HANYA untuk "Active State" (warna link berubah saat scroll).
+  // Logika buka/tutup sudah dihapus dari JS dan dipindahkan ke CSS.
+
+  function updateActiveHeading() {
+    const headings = document.querySelectorAll("h1, h2, h3, h4, h5, h6");
+    const tocLinks = document.querySelectorAll(".toc-link");
+
+    let currentHeadingId = "";
+
+    // Cari heading yang sedang terlihat di viewport
+    for (const heading of headings) {
+      const top = heading.getBoundingClientRect().top;
+      // Jika heading berada di 1/3 atas layar
+      if (top < window.innerHeight / 3) {
+        currentHeadingId = heading.id;
+      } else {
+        break;
+      }
+    }
+
+    // Update class active
+    tocLinks.forEach((link) => {
+      link.classList.remove("active");
+      if (link.getAttribute("data-heading-id") === currentHeadingId) {
+        link.classList.add("active");
+      }
+    });
+  }
+
+  // Gunakan passive listener untuk performa lebih baik
+  window.addEventListener("scroll", updateActiveHeading, { passive: true });
+
+  // Jalankan sekali saat load
+  updateActiveHeading();
+</script>

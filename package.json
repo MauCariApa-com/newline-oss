@@ -1,0 +1,30 @@
+{
+  "name": "newline",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "start": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "check": "astro check"
+  },
+  "dependencies": {
+    "@astrojs/mdx": "4.3.13",
+    "@astrojs/rss": "4.0.15",
+    "@astrojs/sitemap": "3.7.0",
+    "@astrojs/tailwind": "6.0.2",
+    "@tailwindcss/typography": "0.5.10",
+    "astro": "5.18.1",
+    "dayjs": "^1.11.20",
+    "glob": "^13.0.6",
+    "he": "^1.2.0",
+    "highlight.js": "^11.11.1",
+    "shiki": "^4.0.2",
+    "tailwindcss": "3.4.19"
+  },
+  "devDependencies": {
+    "@shikijs/markdown-it": "^3.14.0"
+  }
+}

@@ -1,0 +1,198 @@
+---
+import { getCollection } from 'astro:content';
+
+export interface Props {
+  posts: any[];
+}
+const { posts } = Astro.props;
+
+const authors = await getCollection('authors');
+const uniqueAuthors = Array.from(
+  new Set(authors.map(a => a.data.name?.trim()).filter(Boolean))
+).sort();
+
+const uniqueCategories = Array.from(
+  new Set(
+    posts
+      .flatMap((p) => Array.isArray(p.data.category) ? p.data.category : [p.data.category])
+      .map((c) => c?.trim())
+      .filter(Boolean)
+  )
+).sort();
+---
+
+{/* --- PERUBAHAN BREAKPOINT DIMULAI DI SINI --- */}
+<aside
+  class="w-full lg:w-[250px]
+         bg-gray-50 dark:bg-gray-900
+         border border-gray-200 dark:border-gray-700
+         rounded-lg p-4 h-fit
+         flex flex-col
+         lg:sticky lg:top-24"
+>
+  <button
+    id="filterToggleButton"
+    type="button"
+    aria-label="Toggle filter artikel"
+    aria-expanded="false"
+    class="w-full flex justify-between items-center text-left
+           lg:pointer-events-none"
+  >
+    <h2 class="text-lg font-bold text-gray-800 dark:text-gray-100">
+      Filter Artikel
+    </h2>
+    <svg
+      id="filterToggleIcon"
+      xmlns="http://www.w3.org/2000/svg"
+      fill="none"
+      viewBox="0 0 24 24"
+      stroke-width="2.5"
+      stroke="currentColor"
+      class="w-4 h-4 transform transition-transform duration-300 lg:hidden"
+    >
+      <path stroke-linecap="round" stroke-linejoin="round" d="m19.5 8.25-7.5 7.5-7.5-7.5"></path>
+    </svg>
+  </button>
+
+  <div id="collapsibleFilters" class="grid grid-rows-[0fr] transition-all duration-300 ease-in-out lg:grid-rows-[1fr]">
+    <div class="overflow-hidden">
+      
+      {/* Mobile/Tablet dropdown */}
+      <div class="block lg:hidden space-y-4 pt-4">
+        <div>
+          <label for="authorSelect" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+            Penulis
+          </label>
+          <select
+            id="authorSelect"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm transition-colors duration-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Semua</option>
+            {uniqueAuthors.map(name => (
+              <option value={name.toLowerCase()}>{name}</option>
+            ))}
+          </select>
+        </div>
+
+        <div>
+          <label for="categorySelect" class="block text-sm font-semibold text-gray-700 dark:text-gray-300 mb-1">
+            Kategori
+          </label>
+          <select
+            id="categorySelect"
+            class="w-full rounded-lg border border-gray-300 dark:border-gray-700 bg-white dark:bg-gray-800 px-3 py-2 text-sm transition-colors duration-200 focus:ring-2 focus:ring-primary-500 focus:border-primary-500"
+          >
+            <option value="">Semua</option>
+            {uniqueCategories.map(cat => {
+              const slug = cat.toLowerCase().replace(/\s+/g, '-');
+              return <option value={slug}>{cat}</option>;
+            })}
+          </select>
+        </div>
+      </div>
+
+      {/* Desktop sidebar */}
+      <div class="hidden lg:block pt-4">
+        <div class="mb-6">
+          <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Penulis
+          </h3>
+          <div class="space-y-2">
+            <label class="flex items-center gap-2 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <input type="radio" name="penulis" value="" checked class="focus:ring-primary-500 text-primary-600" />
+              <span>Semua</span>
+            </label>
+            {uniqueAuthors.map(name => (
+              <label class="flex items-center gap-2 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800" key={name}>
+                <input type="radio" name="penulis" value={name.toLowerCase()} class="focus:ring-primary-500 text-primary-600" />
+                <span>{name}</span>
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div>
+          <h3 class="font-semibold text-gray-700 dark:text-gray-300 mb-2">
+            Kategori
+          </h3>
+          <div class="space-y-2">
+            <label class="flex items-center gap-2 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800">
+              <input type="radio" name="kategori" value="" checked class="focus:ring-primary-500 text-primary-600" />
+              <span>Semua</span>
+            </label>
+            {uniqueCategories.map(cat => {
+              const slug = cat.toLowerCase().replace(/\s+/g, '-');
+              return (
+                <label class="flex items-center gap-2 rounded-lg cursor-pointer transition-colors duration-200 hover:bg-gray-100 dark:hover:bg-gray-800" key={cat}>
+                  <input type="radio" name="kategori" value={slug} class="focus:ring-primary-500 text-primary-600" />
+                  <span>{cat}</span>
+                </label>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</aside>
+
+<script client:load>
+document.addEventListener('DOMContentLoaded', () => {
+  const posts = document.querySelectorAll('[data-penulis]');
+  const authorRadios = document.querySelectorAll('input[name="penulis"]');
+  const categoryRadios = document.querySelectorAll('input[name="kategori"]');
+  const authorSelect = document.getElementById('authorSelect');
+  const categorySelect = document.getElementById('categorySelect');
+
+  const normalize = str => str ? str.trim().toLowerCase().replace(/\s+/g,' ') : '';
+  const slugify = str => str ? str.trim().toLowerCase().replace(/\s+/g,'-') : '';
+
+  function applyFilter(selectedAuthor, selectedCategory) {
+    posts.forEach(post => {
+      const penulis = normalize(post.dataset.penulis);
+      const kategori = slugify(post.dataset.kategori);
+      const matchAuthor = !selectedAuthor || penulis.includes(selectedAuthor);
+      const matchCategory = !selectedCategory || kategori.includes(selectedCategory);
+      post.style.display = matchAuthor && matchCategory ? '' : 'none';
+    });
+  }
+
+  authorRadios.forEach(r => r.addEventListener('change', () => {
+    const selectedAuthor = document.querySelector('input[name="penulis"]:checked')?.value || '';
+    const selectedCategory = document.querySelector('input[name="kategori"]:checked')?.value || '';
+    applyFilter(selectedAuthor, selectedCategory);
+  }));
+  categoryRadios.forEach(r => r.addEventListener('change', () => {
+    const selectedAuthor = document.querySelector('input[name="penulis"]:checked')?.value || '';
+    const selectedCategory = document.querySelector('input[name="kategori"]:checked')?.value || '';
+    applyFilter(selectedAuthor, selectedCategory);
+  }));
+
+  if(authorSelect && categorySelect) {
+    authorSelect.addEventListener('change', () => applyFilter(authorSelect.value, categorySelect.value));
+    categorySelect.addEventListener('change', () => applyFilter(authorSelect.value, categorySelect.value));
+  }
+  
+  const toggleButton = document.getElementById('filterToggleButton');
+  const collapsibleDiv = document.getElementById('collapsibleFilters');
+  const toggleIcon = document.getElementById('filterToggleIcon');
+
+  if (toggleButton && collapsibleDiv && toggleIcon) {
+    toggleButton.addEventListener('click', () => {
+      // --- PERUBAHAN JAVASCRIPT DI SINI ---
+      if (window.innerWidth < 1024) { 
+        const isCollapsed = collapsibleDiv.classList.contains('grid-rows-[0fr]');
+        if (isCollapsed) {
+          collapsibleDiv.classList.remove('grid-rows-[0fr]');
+          collapsibleDiv.classList.add('grid-rows-[1fr]');
+          toggleIcon.classList.add('rotate-180');
+        } else {
+          collapsibleDiv.classList.remove('grid-rows-[1fr]');
+          collapsibleDiv.classList.add('grid-rows-[0fr]');
+          toggleIcon.classList.remove('rotate-180');
+        }
+      }
+    });
+  }
+});
+</script>

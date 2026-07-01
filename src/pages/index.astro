@@ -1,0 +1,604 @@
+---
+import BaseLayout from '../layouts/BaseLayout.astro';
+import PostCard from '../components/PostCard.astro';
+// Import AuthorCard tidak lagi diperlukan karena UI-nya dibuat inline
+import { getCollection } from 'astro:content';
+
+// Get all posts and authors - cache data untuk mengurangi pembacaan file berulang
+const allPosts = await getCollection('posts');
+const allAuthors = await getCollection('authors');
+
+// Filter published posts dan sort sekali saja
+const publishedPosts = allPosts
+  .filter(post => !post.data.draft)
+  .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+
+// Get latest posts - reduced untuk faster initial load
+const latestPosts = publishedPosts.slice(0, 3);
+
+// Get unique categories dengan metode yang lebih efisien
+const categorySet = new Set();
+publishedPosts.forEach(post => {
+  const cats = Array.isArray(post.data.category) ? post.data.category : [post.data.category];
+  cats.forEach(cat => cat && categorySet.add(cat));
+});
+
+const categories = Array.from(categorySet);
+
+// Pre-filter hanya kategori yang diperlukan untuk mengurangi iterasi
+const targetCategories = new Set(['Tutorial', 'Review', 'Insight', 'Opini']);
+
+// Hitung featured authors dengan lazy loading - ambil minimal data
+const featuredAuthorsData = allAuthors.slice(0, 3).map(author => {
+  const postCount = publishedPosts.filter(post =>
+    Array.isArray(post.data.authors) &&
+    post.data.authors.includes(author.data.name)
+  ).length;
+
+  return {
+    ...author,
+    postCount
+  };
+});
+
+// Build categories with posts - hanya ambil data yang diperlukan
+const categoriesWithPosts = categories
+  .filter((name): name is string => targetCategories.has(String(name)))
+  .map((name) => {
+    const postsInCategory = publishedPosts.filter((post) => {
+      const raw = post.data.category;
+      if (!raw) return false;
+      return Array.isArray(raw) ? raw.includes(String(name)) : raw === name;
+    });
+
+    return {
+      name,
+      slug: String(name).toLowerCase().replace(/\s+/g, '-'),
+      posts: postsInCategory.slice(0, 2),
+      total: postsInCategory.length,
+    };
+  });
+
+---
+
+<BaseLayout title="Your Journey Start Here">
+  <!-- Hero Section -->
+  <section class="relative overflow-hidden" style="background-color: #414071">
+    <!-- Background Pattern - Defer rendering dengan CSS -->
+    <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2727%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2747%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2727%22 r=%221%22/%3E%3Ccircle cx=%2727%22 cy=%2727%22 r=%221%22/%3E%3Ccircle cx=%2747%22 cy=%2727%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2747%22 r=%221%22/%3E%3Ccircle cx=%2727%22 cy=%2747%22 r=%221%22/%3E%3Ccircle cx=%2747%22 cy=%2747%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); background-repeat: repeat;"></div>
+    
+    <!-- Floating Elements - Render lebih lambat dengan setTimeout -->
+    <div class="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse" style="animation-delay: 0.1s;"></div>
+    <div class="absolute top-40 right-20 w-32 h-32 bg-primary-300/20 rounded-full blur-2xl animate-pulse" style="animation-delay: 1.1s;"></div>
+    <div class="absolute bottom-20 left-1/4 w-16 h-16 bg-indigo-300/20 rounded-full blur-xl animate-pulse" style="animation-delay: 0.6s;"></div>
+    
+    <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
+      <div class="text-center">
+        <!-- Logo/Brand -->
+        <div class="mb-8">
+            <div class="inline-flex items-center justify-center w-20 h-20 bg-transparent">
+          </div>
+        </div>
+        
+        <!-- Main Heading -->
+        <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-primary-100 to-indigo-200 bg-clip-text text-transparent leading-tight">
+          MauCariApa<span class="text-primary-200">.com</span>
+        </h1>
+        
+        <!-- Enhanced Description Card -->
+        <div class="max-w-4xl mx-auto mb-10">
+          <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl">
+            <p class="text-xl md:text-2xl text-white/90 leading-relaxed mb-6">
+              Platform pembelajaran teknologi dengan artikel berkualitas tinggi, tutorial mendalam, insight dan opini yang komprehensif.
+            </p>
+            
+            <!-- Feature Highlights -->
+            <div class="grid md:grid-cols-3 gap-6 mb-8">
+              <div class="flex items-center justify-center space-x-3 text-white/80">
+                <div class="w-10 h-10 bg-green-400/20 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-green-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                  </svg>
+                </div>
+                <span class="font-medium">Konten Berkualitas</span>
+              </div>
+              
+              <div class="flex items-center justify-center space-x-3 text-white/80">
+                <div class="w-10 h-10 bg-blue-400/20 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-blue-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+                  </svg>
+                </div>
+                <span class="font-medium">Mengikuti Tren</span>
+              </div>
+              
+              <div class="flex items-center justify-center space-x-3 text-white/80">
+                <div class="w-10 h-10 bg-purple-400/20 rounded-full flex items-center justify-center">
+                  <svg class="w-5 h-5 text-purple-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
+                  </svg>
+                </div>
+                <span class="font-medium">Semua Kalangan</span>
+              </div>
+            </div>
+            
+            <!-- Stats -->
+            <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
+              <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-white mb-1">{publishedPosts.length}+</div>
+                <div class="text-sm text-white/70">Artikel</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-white mb-1">{allAuthors.length}+</div>
+                <div class="text-sm text-white/70">Penulis</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-white mb-1">{categories.length}+</div>
+                <div class="text-sm text-white/70">Kategori</div>
+              </div>
+              <div class="text-center">
+                <div class="text-2xl md:text-3xl font-bold text-white mb-1">3K+</div>
+                <div class="text-sm text-white/70">Pembaca Bulanan</div>
+              </div>
+            </div>
+            
+            <!-- CTA Buttons -->
+            <div class="flex flex-col sm:flex-row gap-4 justify-center">
+              <a href="#artikel-terbaru" class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-600 bg-white rounded-xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
+                <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.746 0 3.332.477 4.5 1.253v13C19.832 18.477 18.246 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"></path>
+                </svg>
+                Jelajahi Artikel
+              </a>
+              <a href="/#about-us/" class="group inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-white bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl hover:bg-white/20 transition-all duration-200 transform hover:scale-105">
+                <svg class="w-5 h-5 mr-2 group-hover:rotate-12 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                Tentang Kami
+              </a>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Scroll Indicator -->
+          <div class="animate-bounce">
+            <svg class="w-6 h-6 mx-auto text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+            </svg>
+          </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Latest Articles Section -->
+  <section id="artikel-terbaru" class="scroll-margin-top-24 py-16 bg-gray-50 dark:bg-gray-800" data-nosnippet>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 id="artikel-terbaru" class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Artikel Terbaru
+        </h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+          Temukan tutorial, tips, dan insight terbaru dari kami.
+        </p>
+      </div>
+
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 mb-12">
+        {latestPosts.map((post) => (
+          <PostCard post={post} />
+        ))}
+      </div>
+
+      <div class="text-center">
+        <a href="/#blog/" class="btn-primary inline-flex items-center">
+          Lihat Semua Artikel
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Categories with Articles Section -->
+  <section class="py-16" data-nosnippet>
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Kategori Populer
+        </h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          Jelajahi artikel berdasarkan kategori yang Anda minati.
+        </p>
+      </div>
+
+      <!-- Categories Grid with Articles -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
+        {categoriesWithPosts.map((category) => (
+          <div class="card p-6">
+            <div class="flex items-center justify-between mb-6">
+              <div class="flex items-center">
+                <div class="text-3xl mr-4">
+                  {category.name === 'Tutorial' && '📚'}
+                  {category.name === 'Review' && '⭐'}
+                  {category.name === 'Insight' && '💡'}
+                  {category.name === 'Opini' && '💭'}
+                  {!['Tutorial', 'Review', 'Insight', 'Opini'].includes(String(category.name)) && '💻'}
+                </div>
+                <div>
+                  <h3 class="text-xl font-semibold text-gray-900 dark:text-white">
+                    {category.name}
+                  </h3>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">
+                      {category.posts.length} artikel
+                    </p>
+                </div>
+              </div>
+              <a 
+                href={`/kategori/${category.slug}/`}
+                class="btn-secondary text-sm"
+              >
+                Lihat Semua
+              </a>
+            </div>
+            
+            <!-- Articles in Category -->
+            <div class="space-y-4">
+              {category.posts.map((post) => (
+                <div class="flex items-start space-x-4 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-600 transition-colors">
+                  {post.data.heroImage && (
+                    <div class="flex-shrink-0">
+                      <img 
+                        src={post.data.heroImage} 
+                        alt={post.data.title}
+                        class="w-16 h-16 object-cover rounded-lg"
+                      />
+                    </div>
+                  )}
+                  <div class="flex-grow min-w-0">
+                    <h4 class="font-medium text-gray-900 dark:text-white mb-1 line-clamp-2">
+                      <a href={`/${post.slug}/`} class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                        {post.data.title}
+                      </a>
+                    </h4>
+                    <p class="text-sm text-gray-600 dark:text-gray-300 line-clamp-2 mb-2">
+                      {post.data.description}
+                    </p>
+                    <div class="flex items-center text-xs text-gray-500 dark:text-gray-400">
+                      <time>
+                        {post.data.pubDate.toLocaleDateString('id-ID', { 
+                          year: 'numeric', 
+                          month: 'short', 
+                          day: 'numeric' 
+                        })}
+                      </time>
+                      {post.data.tags && post.data.tags.length > 0 && (
+                        <>
+                          <span class="mx-2">•</span>
+                          <span>{post.data.tags.slice(0, 2).join(', ')}</span>
+                        </>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              ))}
+              
+              {category.posts.length === 0 && (
+                <div class="text-center py-8 text-gray-500 dark:text-gray-400">
+                  <div class="text-2xl mb-2">📝</div>
+                  <p class="text-sm">Artikel dalam kategori ini sedang dalam persiapan</p>
+                </div>
+              )}
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <!-- View All Categories -->
+      <div class="text-center mt-12">
+        <a href="/#kategori/" class="btn-secondary inline-flex items-center">
+          Lihat Semua Kategori
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Featured Authors Section (CAROUSEL 3D) -->
+  <section class="py-16 bg-gray-50 dark:bg-gray-800">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      
+      <div class="text-center mb-12">
+        <h2 class="text-3xl md:text-4xl font-bold text-gray-900 dark:text-white mb-4">
+          Penulis Kami
+        </h2>
+        <p class="text-lg text-gray-600 dark:text-gray-300">
+          Kenali para ahli yang berkontribusi dalam platform kami.
+        </p>
+      </div>
+
+      <!-- Carousel Wrapper -->
+      <div id="home-author-carousel-wrapper" class="relative w-full h-[650px] flex flex-col items-center justify-start overflow-hidden mb-12">
+        
+        <!-- Kontainer Kartu -->
+        <div id="home-author-cards-container" class="relative w-full sm:w-[400px] md:w-[450px] h-[550px] z-10 touch-pan-y">
+          {featuredAuthorsData.map((author, index) => (
+            <article 
+              class="home-author-card absolute w-full h-full bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-2xl shadow-lg cursor-pointer transition-all duration-500 ease-in-out flex flex-col overflow-hidden"
+              data-index={index}
+            >
+              
+              <!-- BLOK 1: Profil (Avatar & Nama) -->
+              <header class="flex-none px-6 pt-8 pb-5 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
+                <div class="w-24 h-24 mb-4 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                  {author.data.avatar ? (
+                    <img src={author.data.avatar} alt={author.data.name} class="w-full h-full object-cover" />
+                  ) : (
+                    <span class="text-3xl font-bold text-gray-400 dark:text-gray-500">
+                      {author.data.name.charAt(0)}
+                    </span>
+                  )}
+                </div>
+                <h3 class="text-2xl font-bold text-gray-900 dark:text-white leading-tight">
+                  {author.data.name}
+                </h3>
+                {author.data.meta_title && (
+                  <p class="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">
+                    {author.data.meta_title}
+                  </p>
+                )}
+              </header>
+
+              <!-- BLOK 2: Statistik -->
+              <div class="flex-none px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-center">
+                <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-xs font-bold uppercase tracking-wider">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 20H5a2 2 0 01-2-2V6a2 2 0 012-2h10a2 2 0 012 2v1m2 13a2 2 0 01-2-2V7m2 13a2 2 0 002-2V9a2 2 0 00-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z" />
+                   </svg>
+                  {author.postCount} Artikel
+                </span>
+              </div>
+
+              <!-- BLOK 3: Bio -->
+              <div class="flex-grow overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-gray-800">
+                <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-2 text-xs uppercase tracking-widest text-center sm:text-left">Tentang Penulis</h4>
+                <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed text-center sm:text-left">
+                  {author.data.bio ? author.data.bio : "Penulis ini belum menambahkan biografi singkat."}
+                </p>
+              </div>
+
+              <!-- BLOK 4: Social Media -->
+              <div class="flex-none px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-center gap-4">
+                {author.data.social?.twitter && (
+                  <a href={author.data.social.twitter} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-blue-400 transition-colors">
+                    <span class="sr-only">Twitter</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M8.29 20.251c7.547 0 11.675-6.253 11.675-11.675 0-.178 0-.355-.012-.53A8.348 8.348 0 0022 5.92a8.19 8.19 0 01-2.357.646 4.118 4.118 0 001.804-2.27 8.224 8.224 0 01-2.605.996 4.107 4.107 0 00-6.993 3.743 11.65 11.65 0 01-8.457-4.287 4.106 4.106 0 001.27 5.477A4.072 4.072 0 012.8 9.713v.052a4.105 4.105 0 003.292 4.022 4.095 4.095 0 01-1.853.07 4.108 4.108 0 003.834 2.85A8.233 8.233 0 012 18.407a11.616 11.616 0 006.29 1.84"/></svg>
+                  </a>
+                )}
+                {author.data.social?.linkedin && (
+                  <a href={author.data.social.linkedin} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-blue-700 transition-colors">
+                    <span class="sr-only">LinkedIn</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z" clip-rule="evenodd"/></svg>
+                  </a>
+                )}
+                {author.data.social?.github && (
+                  <a href={author.data.social.github} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-gray-900 dark:hover:text-white transition-colors">
+                    <span class="sr-only">GitHub</span>
+                    <svg class="h-5 w-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path fill-rule="evenodd" d="M12 2C6.477 2 2 6.484 2 12.017c0 4.425 2.865 8.18 6.839 9.504.5.092.682-.217.682-.483 0-.237-.008-.868-.013-1.703-2.782.605-3.369-1.343-3.369-1.343-.454-1.158-1.11-1.466-1.11-1.466-.908-.62.069-.608.069-.608 1.003.07 1.531 1.032 1.531 1.032.892 1.53 2.341 1.088 2.91.832.092-.647.35-1.088.636-1.338-2.22-.253-4.555-1.113-4.555-4.951 0-1.093.39-1.988 1.029-2.688-.103-.253-.446-1.272.098-2.65 0 0 .84-.27 2.75 1.026A9.564 9.564 0 0112 6.844c.85.004 1.705.115 2.504.337 1.909-1.296 2.747-1.027 2.747-1.027.546 1.379.202 2.398.1 2.651.64.7 1.028 1.595 1.028 2.688 0 3.848-2.339 4.695-4.566 4.943.359.309.678.92.678 1.855 0 1.338-.012 2.419-.012 2.747 0 .268.18.58.688.482A10.019 10.019 0 0022 12.017C22 6.484 17.522 2 12 2z" clip-rule="evenodd"/></svg>
+                  </a>
+                )}
+                
+                {(!author.data.social || (!author.data.social.twitter && !author.data.social.linkedin && !author.data.social.github)) && (
+                  <span class="text-xs text-gray-400 italic">Tidak ada tautan sosial</span>
+                )}
+              </div>
+
+              <!-- BLOK 5: Footer -->
+              <footer class="flex-none px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
+                <a 
+                  href={`/penulis/${author.slug}/`} 
+                  class="flex items-center justify-center w-full bg-gray-900 dark:bg-white text-white dark:text-gray-900 px-5 py-3 text-sm font-semibold rounded-lg hover:bg-gray-800 dark:hover:bg-gray-100 transition-colors shadow-sm"
+                >
+                  Baca Semua Artikel
+                </a>
+              </footer>
+
+            </article>
+          ))}
+        </div>
+
+        <!-- Indikator Garis -->
+        <div id="home-author-indicators" class="absolute bottom-10 flex space-x-2 z-20">
+          <!-- Generated by JS -->
+        </div>
+
+      </div>
+
+      <!-- Tombol Lihat Semua -->
+      <div class="text-center">
+        <a href="/#penulis/" class="btn-secondary inline-flex items-center">
+          Lihat Semua Penulis
+          <svg class="w-5 h-5 ml-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 8l4 4m0 0l-4 4m4-4H3"></path>
+          </svg>
+        </a>
+      </div>
+      
+    </div>
+  </section>
+</BaseLayout>
+
+<!-- Script Bawaan (Ditambahkan CSS scrollbar inline agar tidak mengotori global styles) -->
+<style>
+  #home-author-cards-container {
+    perspective: 1200px;
+    transform-style: preserve-3d;
+  }
+  .custom-scrollbar::-webkit-scrollbar {
+    width: 5px;
+  }
+  .custom-scrollbar::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb {
+    @apply bg-gray-300 dark:bg-gray-600 rounded-full;
+  }
+  .custom-scrollbar::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-400 dark:bg-gray-500;
+  }
+</style>
+
+<!-- Script Carousel 3D (Berdiri Sendiri) -->
+<script>
+  document.addEventListener('DOMContentLoaded', () => {
+    const container = document.getElementById('home-author-cards-container');
+    const indicatorContainer = document.getElementById('home-author-indicators');
+    
+    if (!container || !indicatorContainer) return;
+
+    const cards = Array.from(container.querySelectorAll('.home-author-card'));
+    let currentIndex = 0;
+    const totalCards = cards.length;
+
+    if (totalCards <= 1) {
+      if (indicatorContainer) indicatorContainer.style.display = 'none';
+      cards.forEach(card => {
+        card.style.transform = 'none';
+        card.style.position = 'relative';
+      });
+      return;
+    }
+
+    // GENERATE INDIKATOR
+    cards.forEach((_, i) => {
+      const dot = document.createElement('button');
+      dot.ariaLabel = `Go to author ${i + 1}`;
+      dot.className = 'h-1.5 rounded-full transition-all duration-300 ease-in-out';
+      
+      dot.addEventListener('click', () => {
+        if (currentIndex !== i) {
+          currentIndex = i;
+          updateCarousel();
+        }
+      });
+      
+      indicatorContainer.appendChild(dot);
+    });
+
+    const indicators = Array.from(indicatorContainer.children);
+
+    function updateCarousel() {
+      // UPDATE KARTU (LOGIKA CIRCULAR 3D)
+      cards.forEach((card, index) => {
+        let offset = index - currentIndex;
+
+        if (offset < -Math.floor(totalCards / 2)) {
+          offset += totalCards;
+        } else if (offset > Math.floor(totalCards / 2)) {
+          offset -= totalCards;
+        }
+
+        const absOffset = Math.abs(offset);
+
+        const translateX = offset * 45; 
+        const translateZ = -absOffset * 100; 
+        const rotateY = offset * -20; 
+        
+        const opacity = absOffset > 1 ? 0 : 1; 
+        const scale = 1 - absOffset * 0.1;
+        const zIndex = totalCards - absOffset;
+        
+        card.style.transform = `translateX(${translateX}%) scale(${scale}) translateZ(${translateZ}px) rotateY(${rotateY}deg)`;
+        card.style.opacity = String(opacity);
+        card.style.zIndex = String(zIndex);
+        
+        if (absOffset === 0) {
+          card.style.filter = 'blur(0px)';
+          card.style.pointerEvents = 'auto'; 
+        } else {
+          card.style.filter = 'blur(3px)';
+          card.style.pointerEvents = 'auto'; 
+        }
+      });
+
+      // UPDATE INDIKATOR
+      indicators.forEach((dot, i) => {
+        if (i === currentIndex) {
+          dot.classList.add('w-12', 'bg-blue-600', 'dark:bg-blue-500');
+          dot.classList.remove('w-4', 'bg-gray-300', 'dark:bg-gray-600', 'hover:bg-gray-400');
+        } else {
+          dot.classList.add('w-4', 'bg-gray-300', 'dark:bg-gray-600', 'hover:bg-gray-400');
+          dot.classList.remove('w-12', 'bg-blue-600', 'dark:bg-blue-500');
+        }
+      });
+    }
+    
+    cards.forEach(card => {
+      card.addEventListener('click', (e) => {
+        const newIndex = parseInt(card.dataset.index);
+        if (newIndex !== currentIndex) {
+          e.preventDefault(); 
+          currentIndex = newIndex; 
+          updateCarousel(); 
+        }
+      });
+    });
+
+    // FITUR SWIPE
+    let touchStartX = 0;
+    let touchEndX = 0;
+
+    container.addEventListener('touchstart', (e) => {
+      touchStartX = e.changedTouches[0].screenX;
+    }, { passive: true });
+
+    container.addEventListener('touchend', (e) => {
+      touchEndX = e.changedTouches[0].screenX;
+      handleSwipe();
+    }, { passive: true });
+
+    function handleSwipe() {
+      const SWIPE_THRESHOLD = 50; 
+      
+      if (touchStartX - touchEndX > SWIPE_THRESHOLD) {
+        currentIndex = (currentIndex + 1) % totalCards;
+        updateCarousel();
+      } else if (touchEndX - touchStartX > SWIPE_THRESHOLD) {
+        currentIndex = (currentIndex - 1 + totalCards) % totalCards;
+        updateCarousel();
+      }
+    }
+
+    updateCarousel();
+  });
+</script>
+
+<!-- Optimized by WP-Optimize - https://getwpo.com - Database queries: 12 -->
+<!-- Script Bawaan Asli -->
+<script define:vars={{ latestPostsCount: latestPosts.length }}>
+  document.addEventListener('DOMContentLoaded', () => {
+    const floatingElements = document.querySelectorAll('[class*="animate-pulse"]');
+    floatingElements.forEach((el, index) => {
+      setTimeout(() => {
+        el.style.opacity = '1';
+      }, 100 * (index + 1));
+    });
+  });
+
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.style.opacity = '1';
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { rootMargin: '50px' });
+
+  document.querySelectorAll('section').forEach((section, index) => {
+    if (index > 0) {
+      section.style.opacity = '0.5';
+      observer.observe(section);
+    }
+  });
+</script>

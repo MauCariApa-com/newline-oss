@@ -1,0 +1,137 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+// Slugify helper: ubah nama kategori jadi slug URL-friendly
+const slugify = (s: string) =>
+  s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-+/g, '-');
+
+// Ambil semua postingan dan filter yang bukan draft
+const allPosts = await getCollection('posts');
+const publishedPosts = allPosts.filter(post => !post.data.draft);
+
+// Kelompokkan berdasarkan kategori (support array & string)
+const categoriesMap = new Map<string, typeof publishedPosts>();
+
+publishedPosts.forEach(post => {
+  const rawCategory = post.data.category;
+
+  if (Array.isArray(rawCategory)) {
+    rawCategory.forEach(cat => {
+      if (typeof cat !== 'string' || !cat.trim()) return;
+      const key = cat.trim();
+      const existing = categoriesMap.get(key) ?? [];
+      categoriesMap.set(key, [...existing, post]);
+    });
+  } else if (typeof rawCategory === 'string' && rawCategory.trim()) {
+    const key = rawCategory.trim();
+    const existing = categoriesMap.get(key) ?? [];
+    categoriesMap.set(key, [...existing, post]);
+  }
+});
+
+// Ubah jadi array & urutkan berdasarkan jumlah artikel
+const categories = Array.from(categoriesMap.entries())
+  .map(([name, posts]) => ({
+    name,
+    posts: posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf()),
+    count: posts.length
+  }))
+  .sort((a, b) => b.count - a.count);
+
+// Icon kategori
+const getCategoryIcon = (categoryName: string) => {
+  switch (categoryName.toLowerCase()) {
+    case 'tutorial': return '📚';
+    case 'review': return '⭐';
+    case 'open source': return '🔓';
+    case 'opini': return '💭';
+    case 'wordpress': return '🧩';
+    default: return '💻';
+  }
+};
+---
+
+<head>
+  <meta name="robots" content="noindex, nofollow, nosnippet, noarchive" />
+</head>
+
+<BaseLayout 
+  title="Kategori"
+  description="Jelajahi artikel berdasarkan kategori. Temukan topik yang Anda minati di MauCariApa.com."  
+  robots="noindex, nosnippet"
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Page Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        Kategori
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        Jelajahi {categories.length} kategori dengan total {publishedPosts.length} artikel berkualitas tinggi.
+      </p>
+    </div>
+
+    <!-- Kategori Cards -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
+      {categories.map((category) => (
+        <a 
+          href={`/kategori/${slugify(category.name)}/`}
+          class="card p-6 text-center hover:shadow-lg transform hover:scale-105 transition-all duration-200"
+        >
+          <div class="text-3xl mb-3">
+            {getCategoryIcon(category.name)}
+          </div>
+          <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">
+            {category.name}
+          </h3>
+          <p class="text-sm text-gray-600 dark:text-gray-400">
+            {category.count} artikel
+          </p>
+        </a>
+      ))}
+    </div>
+
+    <!-- Semua Artikel Berdasarkan Kategori -->
+    {categories.map((category) => (
+      <section class="mb-16">
+        <div class="flex items-center justify-between mb-8">
+          <div class="flex items-center">
+            <div class="text-3xl mr-4">
+              {getCategoryIcon(category.name)}
+            </div>
+            <h2 class="text-3xl font-bold text-gray-900 dark:text-white">
+              {category.name}
+            </h2>
+          </div>
+          <a 
+            href={`/kategori/${slugify(category.name)}/`}
+            class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+          >
+            Lihat Semua ({category.count})
+          </a>
+        </div>
+        
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+          {category.posts.slice(0, 3).map((post) => (
+            <PostCard post={post} />
+          ))}
+        </div>
+      </section>
+    ))}
+
+    <!-- Empty State -->
+    {categories.length === 0 && (
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">📂</div>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          Belum Ada Kategori
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          Kategori akan muncul setelah artikel pertama dipublikasikan.
+        </p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

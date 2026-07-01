@@ -1,0 +1,145 @@
+---
+import BaseLayout from '../../layouts/BaseLayout.astro';
+import PostCard from '../../components/PostCard.astro';
+import { getCollection } from 'astro:content';
+
+// Slugify untuk konsistensi URL
+const slugify = (str) =>
+  String(str)
+    .toLowerCase()
+    .normalize('NFKD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '');
+
+// Ambil semua post dan filter yang punya field "series"
+const allPosts = await getCollection('posts');
+const publishedPosts = allPosts.filter(post => {
+  if (post.data.series) {
+  }
+  return !post.data.draft && post.data.series;
+});
+
+// Group posts by series
+const seriesMap = new Map();
+
+publishedPosts.forEach(post => {
+  const seriesField = post.data.series;
+  const seriesArray = Array.isArray(seriesField) ? seriesField : [seriesField];
+
+  seriesArray.filter(Boolean).forEach(series => {
+    if (!seriesMap.has(series)) {
+      seriesMap.set(series, []);
+    }
+    seriesMap.get(series).push(post);
+  });
+});
+
+// Ubah map jadi array & urutkan berdasarkan tanggal terbaru
+const seriesList = Array.from(seriesMap.entries())
+  .map(([name, posts]) => {
+    const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
+    return {
+      name,
+      slug: slugify(name),
+      posts: sortedPosts,
+      count: posts.length,
+      latestDate: Math.max(...posts.map(p => p.data.pubDate.valueOf())),
+      description: `Series ${name} terdiri dari ${posts.length} artikel yang membahas topik secara mendalam dan terstruktur.`,
+    };
+  })
+  .sort((a, b) => b.latestDate - a.latestDate);
+---
+
+<head>
+  <meta name="robots" content="noindex, nofollow, nosnippet, noarchive" />
+</head>
+
+<BaseLayout 
+  title="Series"
+  description="Jelajahi series artikel yang membahas topik secara mendalam dan terstruktur di MauCariApa.com."
+>
+  <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <!-- Header -->
+    <div class="text-center mb-12">
+      <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
+        Series Artikel
+      </h1>
+      <p class="text-lg text-gray-600 dark:text-gray-300 max-w-2xl mx-auto">
+        Pelajari topik secara mendalam melalui {seriesList.length} series artikel yang terstruktur dan komprehensif.
+      </p>
+    </div>
+
+    <!-- Series List -->
+    {seriesList.length > 0 ? (
+      <div class="space-y-12">
+        {seriesList.map((series) => (
+          <div class="card p-8">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between mb-6 gap-4">
+              <div>
+                <h2 class="text-2xl font-bold text-gray-900 dark:text-white mb-2">
+                  <a 
+                    href={`/series/${series.slug}/`}
+                    class="hover:text-primary-600 dark:hover:text-primary-400 transition-colors"
+                  >
+                    {series.name}
+                  </a>
+                </h2>
+                <p class="text-gray-600 dark:text-gray-300 mb-4">
+                  {series.description}
+                </p>
+                <div class="flex items-center text-sm text-gray-500 dark:text-gray-400 flex-wrap gap-3">
+                  <span class="bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 px-2 py-1 rounded-full">
+                    {series.count} artikel
+                  </span>
+                  <span>
+                    Terakhir diperbarui: {new Date(series.latestDate).toLocaleDateString('id-ID', {
+                      year: 'numeric',
+                      month: 'long',
+                      day: 'numeric'
+                    })}
+                  </span>
+                </div>
+              </div>
+              <a 
+                href={`/series/${series.slug}/`}
+                class="btn-primary"
+              >
+                Lihat Series
+              </a>
+            </div>
+
+            <!-- Preview 3 artikel -->
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+              {series.posts.slice(0, 3).map((post) => (
+                <PostCard post={post} />
+              ))}
+            </div>
+
+            {series.posts.length > 3 && (
+              <div class="text-center mt-6">
+                <a 
+                  href={`/series/${series.slug}/`}
+                  class="text-primary-600 hover:text-primary-700 dark:text-primary-400 dark:hover:text-primary-300 font-medium"
+                >
+                  Lihat {series.posts.length - 3} artikel lainnya →
+                </a>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>
+    ) : (
+      <!-- Kosong -->
+      <div class="text-center py-16">
+        <div class="text-6xl mb-4">📚</div>
+        <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">
+          Belum Ada Series
+        </h3>
+        <p class="text-gray-600 dark:text-gray-400">
+          Series artikel sedang dalam persiapan. Stay tuned!
+        </p>
+      </div>
+    )}
+  </div>
+</BaseLayout>

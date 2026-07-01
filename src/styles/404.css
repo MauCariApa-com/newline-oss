@@ -1,0 +1,54 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Flicker */
+@layer utilities {
+  @keyframes flicker {
+    0%, 100% { opacity: 0.99; }
+    50% { opacity: 1; }
+    51% { opacity: 0.98; }
+    52% { opacity: 0.97; }
+    53% { opacity: 1; }
+  }
+
+  .animate-flicker {
+    animation: flicker 1.2s infinite;
+  }
+}
+
+/* Scanline effect */
+@layer components {
+  .crt-scanline::before {
+    content: "";
+    @apply absolute inset-0 pointer-events-none z-50;
+    background-image: repeating-linear-gradient(
+      0deg,
+      rgba(255, 255, 255, 0.02),
+      rgba(255, 255, 255, 0.02) 1px,
+      transparent 1px,
+      transparent 2px
+    );
+  }
+}
+
+/* Glitch text RGB */
+@layer components {
+  .glitch-text {
+    @apply relative z-10 text-white;
+  }
+
+  .glitch-text::before,
+  .glitch-text::after {
+    content: attr(data-text);
+    @apply absolute left-0 top-0 opacity-60;
+  }
+
+  .glitch-text::before {
+    @apply text-red-500 -translate-x-[1px];
+  }
+
+  .glitch-text::after {
+    @apply text-blue-500 translate-x-[1px];
+  }
+}
