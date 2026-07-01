@@ -3,15 +3,12 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
 import { getCollection } from 'astro:content';
 
-// Slugify helper: ubah nama kategori jadi slug URL-friendly
 const slugify = (s: string) =>
   s.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9\-]/g, '').replace(/\-+/g, '-');
 
-// Ambil semua postingan dan filter yang bukan draft
 const allPosts = await getCollection('posts');
 const publishedPosts = allPosts.filter(post => !post.data.draft);
 
-// Kelompokkan berdasarkan kategori (support array & string)
 const categoriesMap = new Map<string, typeof publishedPosts>();
 
 publishedPosts.forEach(post => {
@@ -31,7 +28,6 @@ publishedPosts.forEach(post => {
   }
 });
 
-// Ubah jadi array & urutkan berdasarkan jumlah artikel
 const categories = Array.from(categoriesMap.entries())
   .map(([name, posts]) => ({
     name,
@@ -40,7 +36,6 @@ const categories = Array.from(categoriesMap.entries())
   }))
   .sort((a, b) => b.count - a.count);
 
-// Icon kategori
 const getCategoryIcon = (categoryName: string) => {
   switch (categoryName.toLowerCase()) {
     case 'tutorial': return '📚';
@@ -63,7 +58,6 @@ const getCategoryIcon = (categoryName: string) => {
   robots="noindex, nosnippet"
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
         Kategori
@@ -73,7 +67,6 @@ const getCategoryIcon = (categoryName: string) => {
       </p>
     </div>
 
-    <!-- Kategori Cards -->
     <div class="grid grid-cols-2 md:grid-cols-4 gap-6 mb-16">
       {categories.map((category) => (
         <a 
@@ -93,7 +86,6 @@ const getCategoryIcon = (categoryName: string) => {
       ))}
     </div>
 
-    <!-- Semua Artikel Berdasarkan Kategori -->
     {categories.map((category) => (
       <section class="mb-16">
         <div class="flex items-center justify-between mb-8">
@@ -121,7 +113,6 @@ const getCategoryIcon = (categoryName: string) => {
       </section>
     ))}
 
-    <!-- Empty State -->
     {categories.length === 0 && (
       <div class="text-center py-16">
         <div class="text-6xl mb-4">📂</div>

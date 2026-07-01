@@ -1,19 +1,4 @@
 ---
-// src/components/AuthorCard.astro
-// 
-// AuthorCard Component
-// A reusable Astro component that renders an author's profile card with avatar, 
-// name, optional bio, post count, and social media links (Twitter, GitHub, LinkedIn). 
-// Features: responsive design, dark mode support, fallback avatar with initial letter, 
-// and click propagation handling for nested social links. The entire card links to 
-// the author's profile page, while social icons open in new tabs without navigating 
-// away from the card link.
-//
-// Props:
-// - author: Object containing slug and data (name, avatar?, bio?, social?)
-// - postCount?: Optional number of articles by this author
-
-// Type definition for the AuthorCard component props
 interface Props {
   author: {
     slug: string;
@@ -31,16 +16,12 @@ interface Props {
   postCount?: number;
 }
 
-// Destructure props passed to this Astro component
 const { author, postCount } = Astro.props;
 ---
 
-<!-- AuthorCard: Displays author profile information with avatar, bio, post count, and social links -->
 <div class="card p-6 text-center">
-  <!-- Wrap entire card in a link to the author's profile page -->
   <a href={`/penulis/${author.slug}/`} class="block">
     
-    <!-- Avatar Section: Show custom avatar if available, otherwise fallback to initial letter -->
     <div class="mb-4">
       {author.data.avatar ? (
         <img 
@@ -49,36 +30,30 @@ const { author, postCount } = Astro.props;
           class="w-20 h-20 rounded-full mx-auto object-cover"
         />
       ) : (
-        // Fallback: Display a colored circle with the first letter of the author's name
         <div class="w-20 h-20 rounded-full bg-primary-600 flex items-center justify-center text-white text-2xl font-bold mx-auto">
           {author.data.name.charAt(0)}
         </div>
       )}
     </div>
     
-    <!-- Author Name: Clickable heading with hover effects for dark/light mode -->
     <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
       {author.data.name}
     </h3>
     
-    <!-- Optional Bio: Display with line-clamp to limit to 3 lines max -->
     {author.data.bio && (
       <p class="text-gray-600 dark:text-gray-300 mb-4 text-sm line-clamp-3">
         {author.data.bio}
       </p>
     )}
     
-    <!-- Optional Post Count: Show number of articles written by this author -->
     {postCount !== undefined && (
       <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">
         {postCount} artikel
       </p>
     )}
     
-    <!-- Optional Social Links: Render available social media icons with click-through prevention for card link -->
     {author.data.social && (
       <div class="flex justify-center space-x-3">
-        {/* Twitter Link */}
         {author.data.social.twitter && (
           <a 
             href={`https://twitter.com/${author.data.social.twitter}/`}
@@ -92,7 +67,6 @@ const { author, postCount } = Astro.props;
             </svg>
           </a>
         )}
-        {/* GitHub Link */}
         {author.data.social.github && (
           <a 
             href={`https://github.com/${author.data.social.github}/`}
@@ -106,7 +80,6 @@ const { author, postCount } = Astro.props;
             </svg>
           </a>
         )}
-        {/* LinkedIn Link */}
         {author.data.social.linkedin && (
           <a 
             href={`https://linkedin.com/in/${author.data.social.linkedin}/`}

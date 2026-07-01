@@ -3,10 +3,6 @@ import BaseLayout from "./BaseLayout.astro";
 import TableOfContents from "../components/TableOfContents.astro";
 import { getCollection } from "astro:content";
 import { formatJakarta } from "../utils/date";
-import { getActiveAds } from "../utils/getActiveAds.js";
-import AlternatingDisplay from "../components/AlternatingDisplay.tsx";
-import AdSpace from "../components/AdSpace.jsx";
-import SocialShare from "../components/SocialShare.tsx";
 
 export interface Props {
   content: {

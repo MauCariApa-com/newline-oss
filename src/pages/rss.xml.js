@@ -11,7 +11,7 @@ export async function GET(context) {
 
   const publishedPosts = posts
     .filter((post) => !post.data.draft)
-    .filter((post) => post.data.title && post.data.pubDate) // pastikan dua ini ada
+    .filter((post) => post.data.title && post.data.pubDate)
     .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
   return rss({

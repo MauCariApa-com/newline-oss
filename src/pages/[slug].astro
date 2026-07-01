@@ -4,9 +4,8 @@ import PostLayout from '../layouts/PostLayout.astro';
 import PageLayout from '../layouts/PageLayout.astro';
 import PrivacyLayout from '../layouts/PrivacyLayout.astro';
 import { formatJakarta } from '../utils/date';
-import { renderMarkdownAsync } from '../utils/markdown'; // <-- import Shiki async
+import { renderMarkdownAsync } from '../utils/markdown'; 
 
-// ── GETSTATICPATHS
 export async function getStaticPaths() {
   const posts = await getCollection('posts');
   const pages = await getCollection('pages');
@@ -32,9 +31,7 @@ export async function getStaticPaths() {
 
   return [...postPaths, ...listingPaths, ...pagePaths];
 }
-// ── END GETSTATICPATHS
 
-// runtime slug
 const slug = Astro.params.slug;
 
 const posts = await getCollection('posts');
@@ -51,28 +48,20 @@ if (!entry) {
   throw new Error(`404 - Konten tidak ditemukan untuk slug: "${slug}"`);
 }
 
-// ambil Content dan headings
 const { Content, headings } = await entry.render();
 
-// format tanggal
 const pubDate = (post || listing) && entry.data.pubDate
   ? formatJakarta(entry.data.pubDate)
   : null;
 
-// layout khusus
 const specialLayouts = {
   'privacy': PrivacyLayout,
 };
 const SpecialLayout = specialLayouts[slug];
-
-// OPTIONAL: jika ingin override Content dengan Markdown + Shiki
-// const rawMarkdown = entry.body; // atau entry.rawBody jika ada
-// const htmlContent = rawMarkdown ? await renderMarkdownAsync(rawMarkdown) : null;
 ---
 
 {post || listing ? (
   <PostLayout content={entry.data} headings={headings} pubDate={pubDate}>
-    {/* Jika pakai renderMarkdownAsync: <div innerHTML={htmlContent} /> */}
     <Content />
   </PostLayout>
 ) : SpecialLayout ? (

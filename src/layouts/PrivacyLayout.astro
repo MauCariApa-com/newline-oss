@@ -12,7 +12,6 @@ export interface Props {
 const { content } = Astro.props;
 const { title, description } = content;
 
-// Generate headings for TOC
 const headings = [
   { depth: 2, slug: 'bagian-pertama', text: '1. Bagian Pertama' },
   { depth: 2, slug: 'bagian-kedua', text: '2. Bagian Kedua' },
@@ -23,7 +22,6 @@ const headings = [
 <BaseLayout title={title} description={description}>
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
     <div class="lg:grid lg:grid-cols-12 lg:gap-8">
-      <!-- Main Content -->
       <article class="lg:col-span-8 prose prose-lg dark:prose-invert max-w-none">
         <header class="mb-8">
           <h1 class="text-4xl font-bold text-gray-900 dark:text-white mb-4">
@@ -40,7 +38,6 @@ const headings = [
           </div>
         </header>
 
-        <!-- Table of Contents (Mobile) -->
         <div class="lg:hidden mb-8">
           <UniversalTableOfContents headings={headings} />
         </div>
@@ -69,13 +66,10 @@ const headings = [
         <slot />
       </article>
 
-      <!-- Sidebar -->
       <aside class="hidden lg:block lg:col-span-4">
         <div class="sticky top-8 space-y-8">
-          <!-- Table of Contents -->
           <UniversalTableOfContents headings={headings} />
           
-          <!-- Quick Links -->
           <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
               Quick Links
@@ -93,7 +87,6 @@ const headings = [
             </div>
           </div>
 
-          <!-- Donation Section -->
           <div class="bg-primary-50 dark:bg-primary-900/20 rounded-lg p-6">
             <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">
               Dukung Kami

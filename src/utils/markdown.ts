@@ -2,7 +2,6 @@ import MarkdownItAsync from 'markdown-it-async'
 import { fromAsyncCodeToHtml } from '@shikijs/markdown-it/async'
 import { codeToHtml } from 'shiki'
 
-// Inisialisasi MarkdownIt async
 const mdAsync = MarkdownItAsync()
 
 await mdAsync.use(

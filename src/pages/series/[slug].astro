@@ -7,7 +7,6 @@ export async function getStaticPaths() {
   const posts = await getCollection('posts');
   const publishedPosts = posts.filter(post => !post.data.draft && post.data.series);
   
-  // Get unique series
   const seriesNames = [...new Set(publishedPosts.map(post => post.data.series))];
   
   return seriesNames.map((seriesName) => ({
@@ -33,7 +32,6 @@ const { seriesName, posts } = Astro.props;
   description={`Ikuti series ${seriesName} dengan ${posts.length} artikel yang membahas topik secara mendalam dan terstruktur.`}
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Page Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
         {seriesName}
@@ -49,7 +47,6 @@ const { seriesName, posts } = Astro.props;
       </div>
     </div>
 
-    <!-- Breadcrumb -->
     <nav class="mb-8">
       <ol class="flex items-center space-x-2 text-sm text-gray-500 dark:text-gray-400">
         <li><a href="/#" class="hover:text-gray-700 dark:hover:text-gray-200">Beranda</a></li>
@@ -60,7 +57,6 @@ const { seriesName, posts } = Astro.props;
       </ol>
     </nav>
 
-    <!-- Series Progress -->
     <div class="card p-6 mb-8">
       <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
         Progress Series
@@ -69,12 +65,9 @@ const { seriesName, posts } = Astro.props;
       <div class="mt-2">
         {posts.map((post, index) => (
           <div class="flex">
-            {/* Kolom Kiri: Indikator Angka & Garis */}
             <div class="flex flex-col items-center mr-4">
               <!-- Lingkaran Angka -->
               <div class={`flex-shrink-0 w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium z-10 ring-4 ring-white dark:ring-gray-800 ${
-                  // Opsional: Beri warna berbeda jika artikel ini sedang dibuka/aktif (misal lewat slug)
-                  // post.slug === Astro.params.slug ? 'bg-primary-600 text-white shadow-lg shadow-primary-500/50' : 
                   'bg-primary-600 text-white'
                 }`}>
                 {index + 1}
@@ -92,7 +85,6 @@ const { seriesName, posts } = Astro.props;
               )}
             </div>
 
-            {/* Kolom Kanan: Konten */}
             <div class={`flex-grow pt-1 ${index !== posts.length - 1 ? 'pb-8' : ''}`}>
               <a 
                 href={`/${post.slug}/`}
@@ -113,7 +105,6 @@ const { seriesName, posts } = Astro.props;
       </div>
     </div>
 
-    <!-- Posts Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
       {posts.map((post) => (
         <PostCard post={post} />
@@ -122,24 +113,19 @@ const { seriesName, posts } = Astro.props;
   </div>
 
   <style>
-    /* Animasi aliran garis putus-putus */
     @keyframes flowDashed {
       0% {
         background-position: 0 0;
       }
       100% {
-        background-position: 0 20px; /* Nilai ini harus 2x dari tinggi pattern agar loop mulus */
+        background-position: 0 20px;
       }
     }
 
     .dashed-flow {
-      /* Lebar garis */
       width: 2px; 
-      /* Membuat pola garis putus-putus menggunakan gradient: Warna 50%, Transparan 50% */
       background-image: linear-gradient(to bottom, currentColor 50%, transparent 50%);
-      /* Ukuran pattern: Lebar 100%, Tinggi 10px (5px warna, 5px transparan) */
       background-size: 100% 10px;
-      /* Jalankan animasi */
       animation: flowDashed 2s linear infinite;
     }
   </style>

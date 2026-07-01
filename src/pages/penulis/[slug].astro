@@ -14,13 +14,10 @@ export async function getStaticPaths() {
 const { author } = Astro.props;
 const { Content } = await author.render();
 
-// ✅ Dapatkan semua post terlebih dahulu
 const allPosts = await getCollection('posts');
 
-// ✅ Gunakan name, bukan slug
 const authorName = author.data.name;
 
-// ✅ Filter post berdasarkan nama
 const authorPosts = allPosts
   .filter(post =>
     !post.data.draft &&
@@ -29,7 +26,6 @@ const authorPosts = allPosts
   )
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-// ✅ Ambil kategori secara aman
 const categories = [...new Set(authorPosts.flatMap(post => post.data.category || []))];
 ---
 
@@ -43,7 +39,6 @@ const categories = [...new Set(authorPosts.flatMap(post => post.data.category ||
   robots="noindex, nosnippet"
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Author Profile -->
     <div class="text-center mb-12">
       <div class="mb-6">
         {author.data.avatar ? (
@@ -110,7 +105,6 @@ const categories = [...new Set(authorPosts.flatMap(post => post.data.category ||
         </div>
       )}
       
-      <!-- Stats -->
       <div class="flex justify-center space-x-8 text-center">
         <div>
           <div class="text-2xl font-bold text-primary-600">
@@ -131,7 +125,6 @@ const categories = [...new Set(authorPosts.flatMap(post => post.data.category ||
       </div>
     </div>
 
-    <!-- Author's Articles -->
     {authorPosts.length > 0 ? (
       <div>
         <h2 class="text-3xl font-bold text-gray-900 dark:text-white mb-8 text-center">

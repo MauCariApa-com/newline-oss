@@ -9,14 +9,12 @@ export async function getStaticPaths() {
 
   const map = new Map();
   published.forEach(post => {
-    // dukung category array atau string
     const raw = Array.isArray(post.data.category)
       ? post.data.category
       : [post.data.category];
 
     raw.forEach(cat => {
       if (!cat || typeof cat !== 'string') return;
-      // slug inline—tidak pakai slugify
       const slug = cat
         .toLowerCase()
         .trim()

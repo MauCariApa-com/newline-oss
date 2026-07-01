@@ -3,7 +3,6 @@ import BaseLayout from '../../layouts/BaseLayout.astro';
 import PostCard from '../../components/PostCard.astro';
 import { getCollection } from 'astro:content';
 
-// Slugify untuk konsistensi URL
 const slugify = (str) =>
   String(str)
     .toLowerCase()
@@ -12,7 +11,6 @@ const slugify = (str) =>
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/^-+|-+$/g, '');
 
-// Ambil semua post dan filter yang punya field "series"
 const allPosts = await getCollection('posts');
 const publishedPosts = allPosts.filter(post => {
   if (post.data.series) {
@@ -20,7 +18,6 @@ const publishedPosts = allPosts.filter(post => {
   return !post.data.draft && post.data.series;
 });
 
-// Group posts by series
 const seriesMap = new Map();
 
 publishedPosts.forEach(post => {
@@ -35,7 +32,6 @@ publishedPosts.forEach(post => {
   });
 });
 
-// Ubah map jadi array & urutkan berdasarkan tanggal terbaru
 const seriesList = Array.from(seriesMap.entries())
   .map(([name, posts]) => {
     const sortedPosts = posts.sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
@@ -60,7 +56,6 @@ const seriesList = Array.from(seriesMap.entries())
   description="Jelajahi series artikel yang membahas topik secara mendalam dan terstruktur di MauCariApa.com."
 >
   <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-    <!-- Header -->
     <div class="text-center mb-12">
       <h1 class="text-4xl md:text-5xl font-bold text-gray-900 dark:text-white mb-4">
         Series Artikel
@@ -70,7 +65,6 @@ const seriesList = Array.from(seriesMap.entries())
       </p>
     </div>
 
-    <!-- Series List -->
     {seriesList.length > 0 ? (
       <div class="space-y-12">
         {seriesList.map((series) => (
@@ -109,7 +103,6 @@ const seriesList = Array.from(seriesMap.entries())
               </a>
             </div>
 
-            <!-- Preview 3 artikel -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
               {series.posts.slice(0, 3).map((post) => (
                 <PostCard post={post} />
@@ -130,7 +123,6 @@ const seriesList = Array.from(seriesMap.entries())
         ))}
       </div>
     ) : (
-      <!-- Kosong -->
       <div class="text-center py-16">
         <div class="text-6xl mb-4">📚</div>
         <h3 class="text-xl font-semibold text-gray-900 dark:text-white mb-2">

@@ -1,6 +1,5 @@
 import { decode } from "he";
 
-// Recursive decode: handle nested objects & arrays
 export function deepDecode(obj: any): any {
   if (typeof obj === "string") {
     return decode(obj);

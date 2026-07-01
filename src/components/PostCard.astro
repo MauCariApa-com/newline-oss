@@ -1,5 +1,4 @@
 ---
-// src/components/PostCard.astro
 import { getCollection } from "astro:content";
 
 const { post } = Astro.props;
@@ -8,7 +7,6 @@ const authorsData = await getCollection("authors");
 const { title, description, pubDate, heroImage, category, authors, tags } =
   post.data;
 
-// Cari data author
 const postAuthors = (authors || [])
   .map((name) => {
     const lower = name.trim().toLowerCase();
@@ -16,7 +14,6 @@ const postAuthors = (authors || [])
   })
   .filter(Boolean);
 
-// Format tanggal
 const formatDate = (d?: Date) =>
   d
     ? d.toLocaleDateString("id-ID", {
@@ -26,14 +23,13 @@ const formatDate = (d?: Date) =>
       })
     : "—";
 
-// Slugify kategori untuk filter & URL
 const slugify = (str: string) =>
   String(str)
     .toLowerCase()
     .normalize("NFKD")
     .replace(/[\u0300-\u036f]/g, "")
-    .replace(/\s+/g, "-") // replace spasi dengan -
-    .replace(/[^a-z0-9-]+/g, "") // hapus karakter selain a-z0-9-
+    .replace(/\s+/g, "-")
+    .replace(/[^a-z0-9-]+/g, "")
     .replace(/^-+|-+$/g, "");
 ---
 
@@ -59,7 +55,6 @@ const slugify = (str: string) =>
   }
 
   <div class="flex flex-col p-5 flex-1">
-    <!-- Kategori + Tanggal -->
     <div
       class="flex flex-wrap justify-between items-center gap-2 mb-3 text-sm text-gray-500 dark:text-gray-400"
     >
@@ -81,14 +76,12 @@ const slugify = (str: string) =>
       <time datetime={pubDate.toISOString()}>{formatDate(pubDate)}</time>
     </div>
 
-    <!-- Judul -->
     <h3
       class="font-semibold text-gray-900 dark:text-gray-100 text-lg mb-2 line-clamp-2"
     >
       <a href={`/${post.slug}`} class="hover:text-indigo-600">{title}</a>
     </h3>
 
-    <!-- Deskripsi -->
     {
       description && (
         <p class="text-gray-600 dark:text-gray-400 text-sm mb-4 line-clamp-3">
@@ -97,7 +90,6 @@ const slugify = (str: string) =>
       )
     }
 
-    <!-- Penulis clickable -->
     {
       postAuthors.length > 0 && (
         <div class="flex items-center mt-auto pt-3 border-t border-gray-100 dark:border-gray-800">

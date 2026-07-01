@@ -1,22 +1,17 @@
 ---
 import BaseLayout from '../layouts/BaseLayout.astro';
 import PostCard from '../components/PostCard.astro';
-// Import AuthorCard tidak lagi diperlukan karena UI-nya dibuat inline
 import { getCollection } from 'astro:content';
 
-// Get all posts and authors - cache data untuk mengurangi pembacaan file berulang
 const allPosts = await getCollection('posts');
 const allAuthors = await getCollection('authors');
 
-// Filter published posts dan sort sekali saja
 const publishedPosts = allPosts
   .filter(post => !post.data.draft)
   .sort((a, b) => b.data.pubDate.valueOf() - a.data.pubDate.valueOf());
 
-// Get latest posts - reduced untuk faster initial load
 const latestPosts = publishedPosts.slice(0, 3);
 
-// Get unique categories dengan metode yang lebih efisien
 const categorySet = new Set();
 publishedPosts.forEach(post => {
   const cats = Array.isArray(post.data.category) ? post.data.category : [post.data.category];
@@ -25,10 +20,8 @@ publishedPosts.forEach(post => {
 
 const categories = Array.from(categorySet);
 
-// Pre-filter hanya kategori yang diperlukan untuk mengurangi iterasi
 const targetCategories = new Set(['Tutorial', 'Review', 'Insight', 'Opini']);
 
-// Hitung featured authors dengan lazy loading - ambil minimal data
 const featuredAuthorsData = allAuthors.slice(0, 3).map(author => {
   const postCount = publishedPosts.filter(post =>
     Array.isArray(post.data.authors) &&
@@ -41,7 +34,6 @@ const featuredAuthorsData = allAuthors.slice(0, 3).map(author => {
   };
 });
 
-// Build categories with posts - hanya ambil data yang diperlukan
 const categoriesWithPosts = categories
   .filter((name): name is string => targetCategories.has(String(name)))
   .map((name) => {
@@ -62,37 +54,30 @@ const categoriesWithPosts = categories
 ---
 
 <BaseLayout title="Your Journey Start Here">
-  <!-- Hero Section -->
   <section class="relative overflow-hidden" style="background-color: #414071">
-    <!-- Background Pattern - Defer rendering dengan CSS -->
     <div class="absolute inset-0 opacity-10" style="background-image: url('data:image/svg+xml,%3Csvg width=%2260%22 height=%2260%22 viewBox=%220 0 60 60%22 xmlns=%22http://www.w3.org/2000/svg%22%3E%3Cg fill=%22none%22 fill-rule=%22evenodd%22%3E%3Cg fill=%22%23ffffff%22 fill-opacity=%220.1%22%3E%3Ccircle cx=%227%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2727%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%2747%22 cy=%227%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2727%22 r=%221%22/%3E%3Ccircle cx=%2727%22 cy=%2727%22 r=%221%22/%3E%3Ccircle cx=%2747%22 cy=%2727%22 r=%221%22/%3E%3Ccircle cx=%227%22 cy=%2747%22 r=%221%22/%3E%3Ccircle cx=%2727%22 cy=%2747%22 r=%221%22/%3E%3Ccircle cx=%2747%22 cy=%2747%22 r=%221%22/%3E%3C/g%3E%3C/g%3E%3C/svg%3E'); background-repeat: repeat;"></div>
     
-    <!-- Floating Elements - Render lebih lambat dengan setTimeout -->
     <div class="absolute top-20 left-10 w-20 h-20 bg-white/10 rounded-full animate-pulse" style="animation-delay: 0.1s;"></div>
     <div class="absolute top-40 right-20 w-32 h-32 bg-primary-300/20 rounded-full blur-2xl animate-pulse" style="animation-delay: 1.1s;"></div>
     <div class="absolute bottom-20 left-1/4 w-16 h-16 bg-indigo-300/20 rounded-full blur-xl animate-pulse" style="animation-delay: 0.6s;"></div>
     
     <div class="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 lg:py-28">
       <div class="text-center">
-        <!-- Logo/Brand -->
         <div class="mb-8">
             <div class="inline-flex items-center justify-center w-20 h-20 bg-transparent">
           </div>
         </div>
         
-        <!-- Main Heading -->
         <h1 class="text-5xl md:text-7xl font-bold mb-6 bg-gradient-to-r from-white via-primary-100 to-indigo-200 bg-clip-text text-transparent leading-tight">
           MauCariApa<span class="text-primary-200">.com</span>
         </h1>
         
-        <!-- Enhanced Description Card -->
         <div class="max-w-4xl mx-auto mb-10">
           <div class="bg-white/10 backdrop-blur-md rounded-2xl p-8 border border-white/20 shadow-2xl">
             <p class="text-xl md:text-2xl text-white/90 leading-relaxed mb-6">
               Platform pembelajaran teknologi dengan artikel berkualitas tinggi, tutorial mendalam, insight dan opini yang komprehensif.
             </p>
             
-            <!-- Feature Highlights -->
             <div class="grid md:grid-cols-3 gap-6 mb-8">
               <div class="flex items-center justify-center space-x-3 text-white/80">
                 <div class="w-10 h-10 bg-green-400/20 rounded-full flex items-center justify-center">
@@ -122,7 +107,6 @@ const categoriesWithPosts = categories
               </div>
             </div>
             
-            <!-- Stats -->
             <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
               <div class="text-center">
                 <div class="text-2xl md:text-3xl font-bold text-white mb-1">{publishedPosts.length}+</div>
@@ -142,7 +126,6 @@ const categoriesWithPosts = categories
               </div>
             </div>
             
-            <!-- CTA Buttons -->
             <div class="flex flex-col sm:flex-row gap-4 justify-center">
               <a href="#artikel-terbaru" class="group relative inline-flex items-center justify-center px-8 py-4 text-lg font-semibold text-primary-600 bg-white rounded-xl hover:bg-gray-50 transition-all duration-200 transform hover:scale-105 shadow-lg hover:shadow-xl">
                 <svg class="w-5 h-5 mr-2 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -160,7 +143,6 @@ const categoriesWithPosts = categories
           </div>
         </div>
         
-        <!-- Scroll Indicator -->
           <div class="animate-bounce">
             <svg class="w-6 h-6 mx-auto text-white/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
@@ -170,7 +152,6 @@ const categoriesWithPosts = categories
     </div>
   </section>
 
-  <!-- Latest Articles Section -->
   <section id="artikel-terbaru" class="scroll-margin-top-24 py-16 bg-gray-50 dark:bg-gray-800" data-nosnippet>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
@@ -199,7 +180,6 @@ const categoriesWithPosts = categories
     </div>
   </section>
 
-  <!-- Categories with Articles Section -->
   <section class="py-16" data-nosnippet>
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       <div class="text-center mb-12">
@@ -211,7 +191,6 @@ const categoriesWithPosts = categories
         </p>
       </div>
 
-      <!-- Categories Grid with Articles -->
       <div class="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {categoriesWithPosts.map((category) => (
           <div class="card p-6">
@@ -293,7 +272,6 @@ const categoriesWithPosts = categories
         ))}
       </div>
 
-      <!-- View All Categories -->
       <div class="text-center mt-12">
         <a href="/#kategori/" class="btn-secondary inline-flex items-center">
           Lihat Semua Kategori
@@ -305,7 +283,6 @@ const categoriesWithPosts = categories
     </div>
   </section>
 
-  <!-- Featured Authors Section (CAROUSEL 3D) -->
   <section class="py-16 bg-gray-50 dark:bg-gray-800">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
       
@@ -318,10 +295,8 @@ const categoriesWithPosts = categories
         </p>
       </div>
 
-      <!-- Carousel Wrapper -->
       <div id="home-author-carousel-wrapper" class="relative w-full h-[650px] flex flex-col items-center justify-start overflow-hidden mb-12">
         
-        <!-- Kontainer Kartu -->
         <div id="home-author-cards-container" class="relative w-full sm:w-[400px] md:w-[450px] h-[550px] z-10 touch-pan-y">
           {featuredAuthorsData.map((author, index) => (
             <article 
@@ -329,7 +304,6 @@ const categoriesWithPosts = categories
               data-index={index}
             >
               
-              <!-- BLOK 1: Profil (Avatar & Nama) -->
               <header class="flex-none px-6 pt-8 pb-5 border-b border-gray-100 dark:border-gray-700 flex flex-col items-center text-center">
                 <div class="w-24 h-24 mb-4 rounded-full overflow-hidden border-4 border-white dark:border-gray-800 shadow-md bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
                   {author.data.avatar ? (
@@ -350,7 +324,6 @@ const categoriesWithPosts = categories
                 )}
               </header>
 
-              <!-- BLOK 2: Statistik -->
               <div class="flex-none px-6 py-3 border-b border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-center">
                 <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/40 dark:text-blue-300 text-xs font-bold uppercase tracking-wider">
                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -360,7 +333,6 @@ const categoriesWithPosts = categories
                 </span>
               </div>
 
-              <!-- BLOK 3: Bio -->
               <div class="flex-grow overflow-y-auto px-6 py-5 custom-scrollbar bg-white dark:bg-gray-800">
                 <h4 class="font-semibold text-gray-800 dark:text-gray-200 mb-2 text-xs uppercase tracking-widest text-center sm:text-left">Tentang Penulis</h4>
                 <p class="text-sm text-gray-600 dark:text-gray-300 leading-relaxed text-center sm:text-left">
@@ -368,7 +340,6 @@ const categoriesWithPosts = categories
                 </p>
               </div>
 
-              <!-- BLOK 4: Social Media -->
               <div class="flex-none px-6 py-4 border-t border-gray-100 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-800/50 flex justify-center gap-4">
                 {author.data.social?.twitter && (
                   <a href={author.data.social.twitter} target="_blank" rel="nofollow noopener noreferrer" class="text-gray-400 hover:text-blue-400 transition-colors">
@@ -394,7 +365,6 @@ const categoriesWithPosts = categories
                 )}
               </div>
 
-              <!-- BLOK 5: Footer -->
               <footer class="flex-none px-6 py-5 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800">
                 <a 
                   href={`/penulis/${author.slug}/`} 
@@ -408,14 +378,11 @@ const categoriesWithPosts = categories
           ))}
         </div>
 
-        <!-- Indikator Garis -->
         <div id="home-author-indicators" class="absolute bottom-10 flex space-x-2 z-20">
-          <!-- Generated by JS -->
         </div>
 
       </div>
 
-      <!-- Tombol Lihat Semua -->
       <div class="text-center">
         <a href="/#penulis/" class="btn-secondary inline-flex items-center">
           Lihat Semua Penulis
@@ -429,7 +396,6 @@ const categoriesWithPosts = categories
   </section>
 </BaseLayout>
 
-<!-- Script Bawaan (Ditambahkan CSS scrollbar inline agar tidak mengotori global styles) -->
 <style>
   #home-author-cards-container {
     perspective: 1200px;
@@ -449,7 +415,6 @@ const categoriesWithPosts = categories
   }
 </style>
 
-<!-- Script Carousel 3D (Berdiri Sendiri) -->
 <script>
   document.addEventListener('DOMContentLoaded', () => {
     const container = document.getElementById('home-author-cards-container');
@@ -470,7 +435,6 @@ const categoriesWithPosts = categories
       return;
     }
 
-    // GENERATE INDIKATOR
     cards.forEach((_, i) => {
       const dot = document.createElement('button');
       dot.ariaLabel = `Go to author ${i + 1}`;
@@ -489,7 +453,6 @@ const categoriesWithPosts = categories
     const indicators = Array.from(indicatorContainer.children);
 
     function updateCarousel() {
-      // UPDATE KARTU (LOGIKA CIRCULAR 3D)
       cards.forEach((card, index) => {
         let offset = index - currentIndex;
 
@@ -522,7 +485,6 @@ const categoriesWithPosts = categories
         }
       });
 
-      // UPDATE INDIKATOR
       indicators.forEach((dot, i) => {
         if (i === currentIndex) {
           dot.classList.add('w-12', 'bg-blue-600', 'dark:bg-blue-500');
@@ -545,7 +507,6 @@ const categoriesWithPosts = categories
       });
     });
 
-    // FITUR SWIPE
     let touchStartX = 0;
     let touchEndX = 0;
 
@@ -571,34 +532,5 @@ const categoriesWithPosts = categories
     }
 
     updateCarousel();
-  });
-</script>
-
-<!-- Optimized by WP-Optimize - https://getwpo.com - Database queries: 12 -->
-<!-- Script Bawaan Asli -->
-<script define:vars={{ latestPostsCount: latestPosts.length }}>
-  document.addEventListener('DOMContentLoaded', () => {
-    const floatingElements = document.querySelectorAll('[class*="animate-pulse"]');
-    floatingElements.forEach((el, index) => {
-      setTimeout(() => {
-        el.style.opacity = '1';
-      }, 100 * (index + 1));
-    });
-  });
-
-  const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.style.opacity = '1';
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { rootMargin: '50px' });
-
-  document.querySelectorAll('section').forEach((section, index) => {
-    if (index > 0) {
-      section.style.opacity = '0.5';
-      observer.observe(section);
-    }
   });
 </script>

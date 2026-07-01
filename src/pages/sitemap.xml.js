@@ -1,26 +1,17 @@
 export async function GET() {
   const baseUrl = 'https://maucariapa.com';
 
-  // Static pages (tanpa slash di depan agar tidak double)
   const staticPages = [
     '',
-    'series',
     'about-us',
-    'kontak',
-    'kerjasama',
-    'donasi',
-    'proyek-open-source',
-    'branding',
   ];
 
-  // Dynamic content
   const { getCollection } = await import('astro:content');
 
   const posts = await getCollection('posts');
   const publishedPosts = posts.filter(post => !post.data.draft);
   const pages = await getCollection('pages');
 
-  // Unique series
   const seriesNames = [...new Set(
     publishedPosts
       .map(post => post.data.series)
@@ -29,11 +20,9 @@ export async function GET() {
 
   const now = new Date().toISOString();
 
-  // Build XML
   const sitemap = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   ${staticPages.map(page => {
-    // Menghasilkan https://maucariapa.com/ untuk home, dan https://maucariapa.com/path/ untuk lainnya
     const loc = page === '' ? `${baseUrl}/` : `${baseUrl}/${page}/`;
     return `
   <url>
