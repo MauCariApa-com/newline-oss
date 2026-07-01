@@ -18,7 +18,7 @@ Where every line of code tells a story, and every story starts a new line.
 - **Content**: Markdown
 - **Deployment**: Vercel/Netlify/CloudFlare
 
-## 🛠️ Installation
+## Installation
 
 ```bash
 # Clone repository
@@ -80,7 +80,7 @@ Long bio of author...
 - **Meta Tags**: Open Graph and Twitter Cards
 - **Performance**: Optimized images and lazy loading
 
-## 🎨 Customization
+## Customization
 
 ### Themes
 
